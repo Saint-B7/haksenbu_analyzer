@@ -1,0 +1,142 @@
+/* ──────────────────────────────────────────────────────────
+   print.css — 인쇄 보고서 A4 레이아웃 스타일
+   PrintReportView.jsx 에서 import해서 사용.
+   Phase 7에서 각 섹션 컴포넌트가 이 클래스를 공유.
+   ────────────────────────────────────────────────────────── */
+
+/* 화면 — 회색 배경 위 A4 카드 */
+.print-preview-wrapper {
+  min-height: 100vh;
+  background: #f1f5f9;
+  padding: 32px 16px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+/* A4 페이지 카드 — 210mm × 297mm @ 96dpi ≈ 794 × 1123px */
+.print-preview-page {
+  width: 794px;
+  min-height: 1123px;
+  background: white;
+  padding: 56px 64px;
+  font-family: 'Pretendard', system-ui, sans-serif;
+  font-size: 13px;
+  line-height: 1.75;
+  color: #0f172a;
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.12);
+}
+
+/* 상단 툴바 — sticky, 인쇄 시 숨김 */
+.print-toolbar {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 20px;
+  background: white;
+  border-bottom: 1px solid #e2e8f0;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08);
+}
+
+/* 섹션 공통 래퍼 */
+.print-section {
+  margin-bottom: 28px;
+  break-inside: avoid;
+}
+
+/* 섹션 제목 줄 */
+.print-section-title {
+  font-size: 13px;
+  font-weight: 700;
+  color: #4f46e5;
+  border-bottom: 2px solid #e0e7ff;
+  padding-bottom: 5px;
+  margin-bottom: 10px;
+}
+
+/* 표지 */
+.print-cover {
+  text-align: center;
+  padding-bottom: 36px;
+  margin-bottom: 36px;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.print-cover-eyebrow {
+  font-size: 10px;
+  font-weight: 700;
+  color: #6366f1;
+  letter-spacing: 3px;
+  text-transform: uppercase;
+  margin-bottom: 10px;
+}
+
+.print-cover-title {
+  font-size: 26px;
+  font-weight: 800;
+  color: #0f172a;
+  margin-bottom: 6px;
+  line-height: 1.3;
+}
+
+.print-cover-sub {
+  font-size: 13px;
+  color: #475569;
+  margin-bottom: 4px;
+}
+
+.print-cover-date {
+  font-size: 11px;
+  color: #94a3b8;
+  margin-top: 8px;
+}
+
+/* 보고서 푸터 */
+.print-footer {
+  margin-top: 36px;
+  padding-top: 10px;
+  border-top: 1px solid #e2e8f0;
+  font-size: 10px;
+  color: #94a3b8;
+  text-align: center;
+}
+
+/* ── 인쇄 미디어 쿼리 ── */
+@media print {
+  /* 툴바 숨김 */
+  .print-toolbar {
+    display: none !important;
+  }
+
+  body {
+    background: white !important;
+    margin: 0;
+    padding: 0;
+  }
+
+  @page {
+    size: A4 portrait;
+    margin: 1cm;
+  }
+
+  .print-preview-wrapper {
+    padding: 0;
+    background: white;
+  }
+
+  .print-preview-page {
+    width: 100% !important;
+    min-height: unset;
+    box-shadow: none !important;
+    padding: 0 !important;
+  }
+
+  /* 색상 정확도 강제 */
+  * {
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+}

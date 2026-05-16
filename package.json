@@ -1,0 +1,45 @@
+{
+  "name": "haksenbu-analyzer",
+  "version": "1.0.0",
+  "private": true,
+  "description": "학생부 문장 분석기 — Electron 데스크탑 앱",
+  "author": "BaeSeongIn",
+  "license": "UNLICENSED",
+  "type": "module",
+  "main": "dist-electron/main.cjs",
+  "scripts": {
+    "dev": "ELECTRON_RUN_AS_NODE= electron-vite dev",
+    "build": "electron-vite build",
+    "build:win": "npm run build && electron-builder --win --x64 --publish=never",
+    "build:mac": "npm run build && electron-builder --mac --universal --publish=never",
+    "publish:win": "npm run build && electron-builder --win --x64 --publish=always",
+    "publish:mac": "npm run build && electron-builder --mac --universal --publish=always",
+    "dist": "npm run build && electron-builder",
+    "web-dev": "vite",
+    "preview": "vite preview",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:ui": "vitest --ui",
+    "preversion": "npm test",
+    "release:patch": "npm version patch && git push --follow-tags",
+    "release:minor": "npm version minor && git push --follow-tags",
+    "release:major": "npm version major && git push --follow-tags",
+    "icons:gen": "node scripts/gen-icons.cjs"
+  },
+  "dependencies": {
+    "electron-store": "^8.2.0",
+    "electron-updater": "^6.8.3",
+    "lucide-react": "^0.474.0",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1"
+  },
+  "devDependencies": {
+    "@vitejs/plugin-react": "^4.3.4",
+    "electron": "^42.0.1",
+    "electron-builder": "^26.8.1",
+    "electron-vite": "^5.0.0",
+    "jsdom": "^29.1.1",
+    "vite": "^5.4.14",
+    "vitest": "^1.6.1"
+  }
+}

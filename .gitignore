@@ -1,0 +1,31 @@
+# 의존성
+node_modules/
+
+# Vite 빌드 결과 (renderer)
+dist/
+
+# Electron 빌드 결과 (main/preload 번들)
+dist-electron/
+
+# electron-builder 패키징 결과 (dist/ 제외에 포함됨)
+release/
+
+# 아이콘 생성 임시 디렉터리 (npm run icons:gen 중간 산출물)
+build/icon.iconset/
+
+# 환경 변수 (API 키 등 절대 커밋 금지)
+.env
+.env.local
+.env.*.local
+
+# macOS 시스템 파일
+.DS_Store
+
+# 에디터 설정
+.vscode/
+.idea/
+*.swp
+
+# 로그
+*.log
+npm-debug.log*

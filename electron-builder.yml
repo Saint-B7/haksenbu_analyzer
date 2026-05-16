@@ -1,0 +1,85 @@
+# ─────────────────────────────────────────────────────────────────────────────
+# electron-builder 설정
+#
+# 로컬 빌드 (설치 파일만 생성):
+#   npm run build:win   → dist/release/학생부 문장 분석기-Setup-1.0.0.exe
+#   npm run build:mac   → dist/release/학생부 문장 분석기-1.0.0-universal.dmg
+#
+# GitHub Releases 배포 (GH_TOKEN 환경변수 필요):
+#   npm run publish:win
+#   npm run publish:mac
+#
+# 버전 올리기 + 자동 배포:
+#   npm run release:patch  (1.0.0 → 1.0.1)
+#   npm run release:minor  (1.0.0 → 1.1.0)
+#   npm run release:major  (1.0.0 → 2.0.0)
+# ─────────────────────────────────────────────────────────────────────────────
+
+appId: com.baeseongin.haksenbu-analyzer
+productName: 학생부 문장 분석기
+
+directories:
+  output: dist/release
+  buildResources: build   # 아이콘 등 빌드 자산 (build/icon.ico, build/icon.icns)
+
+files:
+  - dist/**/*           # React renderer 빌드 산출물
+  - "!dist/release/**/*"  # 빌드 출력 폴더 자체는 패키징에서 제외
+  - dist-electron/**/*  # Electron main / preload 번들
+
+asar: true
+
+# ── Windows 설정 ─────────────────────────────────────────────────────────────
+win:
+  target:
+    - target: nsis
+      arch:
+        - x64
+  icon: build/icon.ico       # Phase 2에서 생성 (없으면 electron 기본 아이콘 사용)
+  artifactName: "${name}-setup-${version}.${ext}"
+
+nsis:
+  oneClick: false
+  perMachine: false
+  allowToChangeInstallationDirectory: true
+  createDesktopShortcut: true
+  createStartMenuShortcut: true
+  shortcutName: 학생부 문장 분석기
+  installerLanguages:
+    - ko_KR
+    - en_US
+  language: "1042"   # Windows LCID 한국어
+
+# ── macOS 설정 ───────────────────────────────────────────────────────────────
+mac:
+  target:
+    - target: dmg
+      arch:
+        - universal   # Intel + Apple Silicon 동시 지원
+  icon: build/icon.icns   # Phase 2에서 생성 (없으면 electron 기본 아이콘 사용)
+  category: public.app-category.education
+  artifactName: "${name}-${version}-${arch}.${ext}"
+  identity: null          # 코드 사이닝 미사용 (인증서 없음)
+  hardenedRuntime: false  # 코드 사이닝 없으므로 비활성화
+
+dmg:
+  title: "학생부 문장 분석기 ${version}"
+  icon: build/icon.icns
+  window:
+    width: 540
+    height: 380
+  contents:
+    - x: 140
+      y: 200
+      type: file
+    - x: 400
+      y: 200
+      type: link
+      path: /Applications
+
+# ── GitHub Releases 자동 배포 ─────────────────────────────────────────────────
+publish:
+  provider: github
+  owner: Saint-B7
+  repo: haksenbu_analyzer
+  releaseType: release

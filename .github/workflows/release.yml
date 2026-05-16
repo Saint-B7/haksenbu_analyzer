@@ -1,0 +1,62 @@
+name: Build and Release
+
+# 트리거:
+#   1) git tag v*.*.* push → 자동 빌드 + GitHub Releases 배포
+#   2) Actions 탭 → "Run workflow" 버튼 → 수동 실행
+on:
+  push:
+    tags:
+      - 'v*.*.*'
+  workflow_dispatch:
+
+jobs:
+  build:
+    strategy:
+      fail-fast: false       # 한 플랫폼 실패해도 나머지는 계속 빌드
+      matrix:
+        os: [windows-latest, macos-latest]
+
+    runs-on: ${{ matrix.os }}
+
+    permissions:
+      contents: write        # GitHub Releases 생성·업로드 권한
+
+    steps:
+      # ── 소스 체크아웃 ────────────────────────────────────────────────────────
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      # ── Node.js 설정 (npm 캐시 활성화) ──────────────────────────────────────
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      # ── 의존성 설치 (package-lock.json 기준 정확 재현) ──────────────────────
+      - name: Install dependencies
+        run: npm ci
+
+      # ── 테스트 (실패 시 빌드 중단) ──────────────────────────────────────────
+      - name: Run tests
+        run: npm test
+
+      # ── Vite 프로덕션 빌드 (renderer + main + preload) ──────────────────────
+      - name: Build
+        run: npm run build
+
+      # ── Windows: NSIS 설치 파일 빌드 + GitHub Releases 업로드 ───────────────
+      - name: Build & Publish (Windows)
+        if: matrix.os == 'windows-latest'
+        run: npx electron-builder --win --x64 --publish always
+        env:
+          GH_TOKEN: ${{ secrets.GH_TOKEN }}
+
+      # ── macOS: Universal DMG 빌드 + GitHub Releases 업로드 ──────────────────
+      - name: Build & Publish (macOS)
+        if: matrix.os == 'macos-latest'
+        run: npx electron-builder --mac --universal --publish always
+        env:
+          GH_TOKEN: ${{ secrets.GH_TOKEN }}
+          # 코드 사이닝 인증서 없음 — CSC_LINK / CSC_KEY_PASSWORD 의도적으로 비워둠
+          # 기존 사용자는 설치 후 시스템 설정 → 개인정보 보호에서 수동 허용 필요
