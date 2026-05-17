@@ -18,7 +18,8 @@
 appId: com.baeseongin.haksenbu-analyzer
 productName: 학생부 문장 분석기
 
-# afterSign: build/notarize.js   # ← Apple Developer 가입 후 주석 해제
+afterSign: scripts/after-sign.cjs   # ad-hoc 서명 (Developer ID 없는 환경)
+# afterSign: build/notarize.js      # ← Apple Developer 가입 후 교체
 
 directories:
   output: dist/release

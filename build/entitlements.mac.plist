@@ -17,5 +17,8 @@
   <!-- DYLD 환경변수 — Electron 프레임워크 로딩에 필요 -->
   <key>com.apple.security.cs.allow-dyld-environment-variables</key>
   <true/>
+  <!-- 라이브러리 Team ID 검증 비활성 — ad-hoc 재서명된 Electron Framework 로드 허용 -->
+  <key>com.apple.security.cs.disable-library-validation</key>
+  <true/>
 </dict>
 </plist>
