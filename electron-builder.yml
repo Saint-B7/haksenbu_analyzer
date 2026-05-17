@@ -18,6 +18,8 @@
 appId: com.baeseongin.haksenbu-analyzer
 productName: 학생부 문장 분석기
 
+# afterSign: build/notarize.js   # ← Apple Developer 가입 후 주석 해제
+
 directories:
   output: dist/release
   buildResources: build   # 아이콘 등 빌드 자산 (build/icon.ico, build/icon.icns)
@@ -55,16 +57,25 @@ mac:
   target:
     - target: dmg
       arch:
-        - universal   # Intel + Apple Silicon 동시 지원
-  icon: build/icon.icns   # Phase 2에서 생성 (없으면 electron 기본 아이콘 사용)
+        - universal   # Intel + Apple Silicon 통합 바이너리
+  icon: build/icon.icns
   category: public.app-category.education
   artifactName: "${name}-${version}-${arch}.${ext}"
-  identity: null          # 코드 사이닝 미사용 (인증서 없음)
-  hardenedRuntime: false  # 코드 사이닝 없으므로 비활성화
+  minimumSystemVersion: "11.0"   # Big Sur 이상 (M1/M4 호환)
+  # === 현재: ad-hoc 서명 (Developer ID 인증서 없음) ===
+  identity: null
+  hardenedRuntime: true          # entitlements 활성화에 필수
+  gatekeeperAssess: false        # 빌드 중 spctl 평가 생략 (인증서 없으면 항상 실패)
+  entitlements: build/entitlements.mac.plist
+  entitlementsInherit: build/entitlements.mac.plist
+  # === Apple Developer 가입 후 변경: ===
+  # identity: "Developer ID Application: <이름> (<TEAM_ID>)"
+  # afterSign: build/notarize.js
 
 dmg:
   title: "학생부 문장 분석기 ${version}"
   icon: build/icon.icns
+  sign: false          # DMG 자체 서명 비활성 (인증서 없음)
   window:
     width: 540
     height: 380

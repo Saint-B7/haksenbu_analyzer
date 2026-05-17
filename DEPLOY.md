@@ -203,6 +203,71 @@ Error: Resource not accessible by integration
 
 ## 5. 아이콘 재생성
 
+---
+
+## 6. Apple Developer 가입 후 코드 사이닝 활성화
+
+현재 빌드는 **ad-hoc 서명** 상태입니다. Apple Developer Program($99/년) 가입 후 아래 절차로 전환하면 사용자가 Gatekeeper 경고 없이 앱을 바로 실행할 수 있습니다.
+
+### 6-1. 준비
+
+1. [developer.apple.com](https://developer.apple.com) 가입 ($99/년)
+2. Xcode → Preferences → Accounts → 계정 추가 후 **Developer ID Application** 인증서 발급
+3. Keychain Access 에서 인증서와 개인키가 등록됐는지 확인
+
+### 6-2. 환경변수 등록
+
+`.env` (로컬) 또는 GitHub Secrets (CI):
+
+| 변수명 | 설명 |
+|--------|------|
+| `APPLE_ID` | Apple ID 이메일 주소 |
+| `APPLE_APP_SPECIFIC_PASSWORD` | appleid.apple.com → 앱 전용 암호 |
+| `APPLE_TEAM_ID` | 개발자 계정 팀 ID (10자리 영문+숫자) |
+
+### 6-3. 코드 변경 (3곳)
+
+**① `electron-builder.yml`** — 루트 `afterSign` 주석 해제, `mac.identity` 변경:
+
+```yaml
+afterSign: build/notarize.js   # 주석 해제
+
+mac:
+  identity: "Developer ID Application: 홍길동 (XXXXXXXXXX)"  # 실제 값으로 변경
+  # identity: null  ← 이 줄 제거 또는 주석 처리
+```
+
+**② `build/notarize.js`** — 내부 주석 해제 (exports.default 함수 본문)
+
+**③ 의존성 추가:**
+
+```bash
+npm i -D @electron/notarize
+```
+
+### 6-4. GitHub Actions 환경변수 전달
+
+`.github/workflows/release.yml` 의 macOS 빌드 스텝에 추가:
+
+```yaml
+env:
+  GH_TOKEN: ${{ secrets.GH_TOKEN }}
+  APPLE_ID: ${{ secrets.APPLE_ID }}
+  APPLE_APP_SPECIFIC_PASSWORD: ${{ secrets.APPLE_APP_SPECIFIC_PASSWORD }}
+  APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+```
+
+### 6-5. 검증
+
+```bash
+ELECTRON_RUN_AS_NODE= npm run build:mac
+# 빌드 로그에서 "Notarizing..." 메시지 확인 (약 5~10분 추가 소요)
+# 완료 후: spctl --assess --verbose "/Applications/학생부 문장 분석기.app"
+# 결과: "accepted" 이면 성공
+```
+
+---
+
 커스텀 아이콘 PNG(1024×1024)가 준비된 경우:
 
 1. `build/source-icon.png` 로 저장

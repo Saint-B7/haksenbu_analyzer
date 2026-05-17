@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+  <!-- 네트워크 클라이언트 (OpenRouter API 호출) -->
+  <key>com.apple.security.network.client</key>
+  <true/>
+  <!-- 사용자가 직접 선택한 파일 읽기/쓰기 -->
+  <key>com.apple.security.files.user-selected.read-write</key>
+  <true/>
+  <!-- JIT 컴파일 — V8 엔진 동작에 필수 -->
+  <key>com.apple.security.cs.allow-jit</key>
+  <true/>
+  <!-- 서명되지 않은 실행 가능 메모리 — Electron 내부 동작에 필요 -->
+  <key>com.apple.security.cs.allow-unsigned-executable-memory</key>
+  <true/>
+  <!-- DYLD 환경변수 — Electron 프레임워크 로딩에 필요 -->
+  <key>com.apple.security.cs.allow-dyld-environment-variables</key>
+  <true/>
+</dict>
+</plist>
