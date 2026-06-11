@@ -22,19 +22,29 @@ import {
 // 분석에 사용하는 모델 목록 (연결 완료 후 설정 화면)
 const ANALYSIS_MODELS = [
   { id: 'anthropic/claude-sonnet-4-5',    label: 'Claude Sonnet 4.5 (권장)' },
+  // OpenRouter에서 ID 검증 완료 — Anthropic 신모델은 점(dot) 표기 사용
+  { id: 'anthropic/claude-sonnet-4.6',    label: 'Claude Sonnet 4.6' },
+  { id: 'anthropic/claude-opus-4.6',      label: 'Claude Opus 4.6 (고성능·고비용)' },
   { id: 'anthropic/claude-opus-4',        label: 'Claude Opus 4' },
   { id: 'anthropic/claude-haiku-4-5',     label: 'Claude Haiku 4.5 (빠름)' },
   { id: 'openai/gpt-4o',                  label: 'GPT-4o' },
   { id: 'openai/gpt-4o-mini',             label: 'GPT-4o mini (빠름/저렴)' },
   { id: 'google/gemini-2.0-flash-001',    label: 'Gemini 2.0 Flash' },
   { id: 'google/gemini-2.5-pro-preview',  label: 'Gemini 2.5 Pro' },
+  // DeepSeek — OpenAI 호환 chat completions, 가성비 옵션
+  { id: 'deepseek/deepseek-v3.2',         label: 'DeepSeek (저비용)' },
 ];
 
 // 연결 테스트에 사용하는 모델 (가볍고 저렴한 것 우선)
+// 연결 테스트는 max_tokens=10 ping이라 비용이 거의 없으므로,
+// 신규 모델도 연결 가능 여부를 확인할 수 있게 함께 노출한다.
 const TEST_MODELS = [
   { id: 'google/gemini-2.0-flash-001',  label: 'Gemini 2.0 Flash (가장 저렴)' },
+  { id: 'deepseek/deepseek-v3.2',       label: 'DeepSeek (저비용)' },
   { id: 'anthropic/claude-haiku-4-5',   label: 'Claude Haiku 4.5' },
   { id: 'anthropic/claude-sonnet-4-5',  label: 'Claude Sonnet 4.5' },
+  { id: 'anthropic/claude-sonnet-4.6',  label: 'Claude Sonnet 4.6' },
+  { id: 'anthropic/claude-opus-4.6',    label: 'Claude Opus 4.6' },
 ];
 
 const DEFAULT_ANALYSIS_MODEL = 'anthropic/claude-sonnet-4-5';
