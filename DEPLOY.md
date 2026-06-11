@@ -21,11 +21,11 @@
 GitHub에서 저장소를 생성하고 `electron-builder.yml`의 `publish` 섹션을 실제 값으로 교체합니다.
 
 ```yaml
-# electron-builder.yml
+# electron-builder.yml — 현재 실제 설정값
 publish:
   provider: github
-  owner: 본인_GitHub_사용자명   # 예: baeseong-in
-  repo: haksenbu-analyzer-desktop
+  owner: Saint-B7
+  repo: haksenbu_analyzer
   releaseType: release
 ```
 
@@ -47,8 +47,10 @@ GitHub 저장소 → **Settings** → **Secrets and variables** → **Actions** 
 ### 1-3. 원격 저장소 연결
 
 ```bash
+# 이미 origin 이 git@github.com:Saint-B7/haksenbu_analyzer.git 으로 연결돼 있습니다.
+# 신규 환경에서 처음 연결하는 경우에만 아래를 사용하세요.
 git init
-git remote add origin https://github.com/사용자명/haksenbu-analyzer-desktop.git
+git remote add origin https://github.com/Saint-B7/haksenbu_analyzer.git
 git add .
 git commit -m "chore: initial commit"
 git push -u origin main
@@ -90,20 +92,19 @@ GitHub 저장소 → **Actions** 탭 → 실행 중인 워크플로 클릭
 | 테스트 | ~30초 | |
 | Vite 빌드 | ~1분 | |
 | Windows exe 빌드 | ~5분 | Electron 바이너리 캐시 후 단축 |
-| macOS dmg 빌드 | ~8분 | Universal(x64+arm64) 병합 포함 |
-| **합계** | **약 10~15분** | |
+| **합계** | **약 7~10분** | |
+
+> 현재 릴리즈 워크플로(`.github/workflows/release.yml`)는 **Windows 전용**입니다.
+> (macOS 빌드는 이번 라운드 범위에서 제외 — 추후 필요 시 매트릭스에 다시 추가)
 
 ### 배포 완료 확인
 
-Actions 완료 후 **Releases** 탭에 다음 파일이 자동 등록됩니다:
+Actions 완료 후 **Releases** 탭에 다음 **3종**이 자동 등록됩니다:
 
 ```
 haksenbu-analyzer-setup-1.0.1.exe          ← Windows 설치 파일
-haksenbu-analyzer-setup-1.0.1.exe.blockmap ← 자동 업데이트용
-haksenbu-analyzer-1.0.1-universal.dmg      ← macOS 설치 파일
-haksenbu-analyzer-1.0.1-universal.dmg.blockmap
-latest.yml                                  ← Windows 자동 업데이트 메타
-latest-mac.yml                              ← macOS 자동 업데이트 메타
+haksenbu-analyzer-setup-1.0.1.exe.blockmap ← 자동 업데이트 차등 다운로드용
+latest.yml                                  ← 자동 업데이트 메타 (★ 반드시 존재해야 함)
 ```
 
 ### 기존 사용자 자동 업데이트 흐름
@@ -112,6 +113,23 @@ latest-mac.yml                              ← macOS 자동 업데이트 메타
 2. 헤더에 "새 버전 감지됨" 배지 표시
 3. 백그라운드 다운로드 진행 ("새 버전 42% 다운로드 중")
 4. 완료 후 팝업 → [지금 재시작] 클릭 시 즉시 적용
+
+### 한 줄 배포 절차 (요약)
+
+```
+코드 수정 + git commit
+  → npm run release:patch
+  → GitHub Actions 빌드 완료 대기 (~10분)
+  → Releases 에 .exe / latest.yml / blockmap 3종 확인
+  → 기존 사용자 앱이 다음 실행 시 자동 업데이트
+```
+
+### 자동 업데이트가 안 될 때 체크리스트
+
+1. **Release 에 `latest.yml` 이 있는가?** — 자동 업데이트의 핵심 메타. 없으면 절대 동작하지 않음
+2. **`package.json` 의 version 이 사용자 설치본보다 높은가?** — 같거나 낮으면 업데이트로 인식하지 않음
+3. **사용자 앱이 자동 업데이트 코드 포함 버전인가?** — updater 미포함 구버전 설치자는 이번 한 번만 수동 설치 필요 (이후부터 자동)
+4. **저장소 Secrets 에 `GH_TOKEN`(repo 쓰기 권한) 이 등록돼 있는가?** — 없으면 CI publish 가 실패해 Release 자체가 비어 있음
 
 ---
 

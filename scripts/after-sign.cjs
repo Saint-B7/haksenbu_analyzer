@@ -32,7 +32,8 @@ const ENTITLEMENTS = `<?xml version="1.0" encoding="UTF-8"?>
 </plist>`;
 
 module.exports = async function afterSign({ appOutDir, packager }) {
-  if (process.platform !== 'darwin') return;
+  // 타깃이 macOS 일 때만 ad-hoc 서명 (Windows/Linux 빌드에서는 건너뜀)
+  if (packager.platform.nodeName !== 'darwin') return;
 
   const appName = packager.appInfo.productName;
   const appPath = path.join(appOutDir, `${appName}.app`);

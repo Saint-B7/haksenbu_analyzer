@@ -1,4 +1,4 @@
-name: Build and Release
+name: Release (Windows)
 
 # 트리거:
 #   1) git tag v*.*.* push → 자동 빌드 + GitHub Releases 배포
@@ -10,13 +10,8 @@ on:
   workflow_dispatch:
 
 jobs:
-  build:
-    strategy:
-      fail-fast: false       # 한 플랫폼 실패해도 나머지는 계속 빌드
-      matrix:
-        os: [windows-latest, macos-latest]
-
-    runs-on: ${{ matrix.os }}
+  build-win:
+    runs-on: windows-latest
 
     permissions:
       contents: write        # GitHub Releases 생성·업로드 권한
@@ -41,22 +36,10 @@ jobs:
       - name: Run tests
         run: npm test
 
-      # ── Vite 프로덕션 빌드 (renderer + main + preload) ──────────────────────
-      - name: Build
-        run: npm run build
-
-      # ── Windows: NSIS 설치 파일 빌드 + GitHub Releases 업로드 ───────────────
+      # ── Windows NSIS 설치 파일 빌드 + GitHub Releases 업로드 ────────────────
+      #   --publish always: latest.yml + .exe + .blockmap 을 Release 에 자동 등록
+      #   GH_TOKEN: 저장소 Settings → Secrets → Actions 에 등록된 PAT(repo 쓰기 권한)
       - name: Build & Publish (Windows)
-        if: matrix.os == 'windows-latest'
-        run: npx electron-builder --win --x64 --publish always
+        run: npm run build && npx electron-builder --win --x64 --publish always
         env:
           GH_TOKEN: ${{ secrets.GH_TOKEN }}
-
-      # ── macOS: Universal DMG 빌드 + GitHub Releases 업로드 ──────────────────
-      - name: Build & Publish (macOS)
-        if: matrix.os == 'macos-latest'
-        run: npx electron-builder --mac --universal --publish always
-        env:
-          GH_TOKEN: ${{ secrets.GH_TOKEN }}
-          # 코드 사이닝 인증서 없음 — CSC_LINK / CSC_KEY_PASSWORD 의도적으로 비워둠
-          # 기존 사용자는 설치 후 시스템 설정 → 개인정보 보호에서 수동 허용 필요
