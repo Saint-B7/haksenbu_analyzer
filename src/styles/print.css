@@ -4,7 +4,10 @@
    Phase 7에서 각 섹션 컴포넌트가 이 클래스를 공유.
    ────────────────────────────────────────────────────────── */
 
-/* 화면 — 회색 배경 위 A4 카드 */
+/* 화면 — 회색 배경 위 A4 카드
+   인쇄 보고서(종이)는 항상 흰색이므로, 앱이 다크모드(html.dark)여도 미리보기는
+   언제나 라이트 톤으로 보여야 한다. color-scheme: light 로 OS/브라우저 다크
+   환경의 기본 배경·폼 요소 다크화를 차단하고, 색상은 아래에서 명시적으로 고정한다. */
 .print-preview-wrapper {
   min-height: 100vh;
   background: #f1f5f9;
@@ -12,7 +15,12 @@
   display: flex;
   flex-direction: column;
   align-items: center;
+  color-scheme: light;
 }
+
+/* 다크모드에서도 미리보기는 라이트 고정 — 배경·글자색을 명시적으로 강제 */
+.dark .print-preview-wrapper { background: #f1f5f9; }
+.dark .print-preview-page { background: #ffffff; color: #0f172a; }
 
 /* A4 페이지 카드 — 210mm × 297mm @ 96dpi ≈ 794 × 1123px */
 .print-preview-page {
@@ -41,20 +49,19 @@
   box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08);
 }
 
-/* 섹션 공통 래퍼 */
+/* 섹션 공통 래퍼
+   전문이 길어지면 섹션이 한 페이지를 넘을 수 있으므로 섹션 전체에는
+   break-inside: avoid 를 걸지 않는다(걸면 큰 섹션이 통째로 다음 장으로
+   밀려 빈 페이지가 생긴다). 대신 개별 항목(.print-item)만 잘림을 막는다. */
 .print-section {
   margin-bottom: 28px;
-  break-inside: avoid;
 }
 
-/* 섹션 제목 줄 */
-.print-section-title {
-  font-size: 13px;
-  font-weight: 700;
-  color: #4f46e5;
-  border-bottom: 2px solid #e0e7ff;
-  padding-bottom: 5px;
-  margin-bottom: 10px;
+/* 개별 항목(평가자 1명 / 기준 1개 / 단계 1개 등) — 페이지 중간 잘림 방지.
+   섹션 제목·설명은 이제 PrintSection 컴포넌트가 인라인으로 그리므로
+   .print-section-title CSS 규칙은 더 이상 사용하지 않아 제거함. */
+.print-item {
+  break-inside: avoid;
 }
 
 /* 표지 */

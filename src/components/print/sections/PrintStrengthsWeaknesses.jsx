@@ -1,5 +1,9 @@
 // 인쇄 보고서 — 강점 · 약점 · 보완 제안 섹션
+// 모든 텍스트는 stripBoldMarkup 으로 별표 마크업을 제거한 평문으로 인쇄한다.
 import React from 'react';
+import { stripBoldMarkup } from '../../../lib/text-format';
+import { PrintSection } from '../PrintSection.jsx';
+import { PRINT_DESCRIPTIONS } from '../../../data/print-descriptions';
 
 function itemText(item, ...keys) {
   if (typeof item === 'string') return item;
@@ -16,8 +20,7 @@ export function PrintStrengthsWeaknesses({ result }) {
   if (!hasS && !hasW && !hasSug) return null;
 
   return (
-    <div className="print-section">
-      <div className="print-section-title">강점 · 약점 · 보완 제안</div>
+    <PrintSection title="강점 · 약점 · 보완 제안" description={PRINT_DESCRIPTIONS.sw}>
 
       {/* 강점 / 약점 2열 */}
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '14px', marginBottom: hasSug ? '10px' : 0 }}>
@@ -29,7 +32,7 @@ export function PrintStrengthsWeaknesses({ result }) {
                 fontSize: '11px', color: '#374151', lineHeight: 1.5,
                 padding: '3px 8px', borderLeft: '2px solid #10b981', marginBottom: '3px',
               }}>
-                {itemText(s, 'point', 'strength')}
+                {stripBoldMarkup(itemText(s, 'point', 'strength'))}
               </div>
             ))}
           </div>
@@ -42,7 +45,7 @@ export function PrintStrengthsWeaknesses({ result }) {
                 fontSize: '11px', color: '#374151', lineHeight: 1.5,
                 padding: '3px 8px', borderLeft: '2px solid #f43f5e', marginBottom: '3px',
               }}>
-                {itemText(w, 'point', 'weakness')}
+                {stripBoldMarkup(itemText(w, 'point', 'weakness'))}
               </div>
             ))}
           </div>
@@ -58,11 +61,11 @@ export function PrintStrengthsWeaknesses({ result }) {
               fontSize: '11px', color: '#374151', lineHeight: 1.5,
               padding: '3px 8px', borderLeft: '2px solid #a5b4fc', marginBottom: '3px',
             }}>
-              {itemText(s, 'suggestion', 'action')}
+              {stripBoldMarkup(itemText(s, 'suggestion', 'action'))}
             </div>
           ))}
         </div>
       )}
-    </div>
+    </PrintSection>
   );
 }
