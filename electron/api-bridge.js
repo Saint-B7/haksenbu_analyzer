@@ -19,6 +19,36 @@ const ERR_DIAG_LEN = 400;   // 오류 진단 본문 최대 길이
 const TEST_BODY_LEN = 200;  // 테스트 오류 원문 최대 길이
 
 /**
+ * OpenRouter 공통 헤더 빌더 — 모든 헤더 값을 ASCII(0~255)로 보장한다.
+ *
+ * 왜 필요한가?
+ *   fetch는 헤더 값을 ByteString(문자 코드 0~255)으로 변환한다.
+ *   한글 등 코드포인트 > 255 문자가 헤더에 들어가면 다음 오류로 실패한다:
+ *     "Cannot convert argument to a ByteString ... value of 54617 ..."
+ *   (54617 = 0xD559 = '학')
+ *   따라서 X-Title은 한글 앱 이름 대신 ASCII 영문 식별자를 사용하고,
+ *   Authorization 키에서는 붙여넣기로 섞여 들어온 보이지 않는 비ASCII
+ *   공백류(제로폭·NBSP·전각공백 등)만 제거한다. 키 내용 자체는 변형하지 않는다.
+ *
+ * @param {string} apiKey safeStorage에서 복호화된 OpenRouter API 키
+ * @returns {Record<string,string>} ASCII 안전 헤더
+ */
+export const buildOpenRouterHeaders = (apiKey) => {
+  // 보이지 않는 비ASCII 공백류만 제거: 제로폭(200B~200D), 제로폭 NBSP(FEFF),
+  // NBSP(00A0), 전각 공백(3000). 일반 공백/문자는 건드리지 않고 앞뒤만 trim.
+  const cleanKey = String(apiKey || '')
+    .replace(/[\u200B-\u200D\uFEFF\u00A0\u3000]/g, '')
+    .trim();
+  return {
+    'Content-Type':  'application/json',
+    'Authorization': `Bearer ${cleanKey}`,
+    // OpenRouter 권장 헤더 — Usage 대시보드에서 호출 앱을 식별 (반드시 ASCII)
+    'HTTP-Referer':  'https://github.com/haksenbu-analyzer',
+    'X-Title':       'Haksenbu Analyzer',
+  };
+};
+
+/**
  * OpenRouter에 LLM 요청을 보내고 파싱된 결과를 반환
  *
  * @param {{
@@ -33,13 +63,8 @@ const TEST_BODY_LEN = 200;  // 테스트 오류 원문 최대 길이
 export const callOpenRouter = async ({ system, userMsg, maxTokens = 8000, apiKey, model }) => {
   const res = await fetch(OPENROUTER_URL, {
     method: 'POST',
-    headers: {
-      'Content-Type':  'application/json',
-      'Authorization': `Bearer ${apiKey}`,
-      // OpenRouter 권장 헤더 — 어떤 앱에서 호출하는지 식별 (Usage 대시보드에 표시됨)
-      'HTTP-Referer':  'https://github.com/haksenbu-analyzer',
-      'X-Title':       '학생부 문장 분석기',
-    },
+    // 헤더는 공통 빌더로 — ASCII 보장 (한글 X-Title로 인한 ByteString 오류 방지)
+    headers: buildOpenRouterHeaders(apiKey),
     body: JSON.stringify({
       model,
       max_tokens: maxTokens,
@@ -92,12 +117,8 @@ export const testOpenRouter = async ({ apiKey, model }) => {
   try {
     const res = await fetch(OPENROUTER_URL, {
       method: 'POST',
-      headers: {
-        'Content-Type':  'application/json',
-        'Authorization': `Bearer ${apiKey}`,
-        'HTTP-Referer':  'https://github.com/haksenbu-analyzer',
-        'X-Title':       '학생부 문장 분석기',
-      },
+      // 연결 테스트도 실제 호출과 동일한 ASCII 안전 헤더 사용
+      headers: buildOpenRouterHeaders(apiKey),
       body: JSON.stringify({
         model,
         max_tokens: 10,

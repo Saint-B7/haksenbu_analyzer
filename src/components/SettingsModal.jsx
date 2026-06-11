@@ -325,7 +325,10 @@ function TestResultView({ testResult }) {
   let mainMsg;
   let showRechargeLink = false;
 
-  if (statusCode === 401) {
+  if (/ByteString|greater than 255/i.test(message)) {
+    // 헤더에 한글/특수문자가 섞여 fetch가 ByteString 변환에 실패한 경우
+    mainMsg = 'API 키에 한글이나 특수 문자가 섞여 있을 수 있습니다. 키를 다시 복사해 붙여넣어 주세요. (앞뒤 공백 포함 주의)';
+  } else if (statusCode === 401) {
     mainMsg = '키가 거부되었습니다. 키를 다시 확인하거나 새로 발급해 주세요.';
   } else if (statusCode === 402) {
     mainMsg = 'OpenRouter 잔액이 부족합니다.';
