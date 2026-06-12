@@ -28,7 +28,7 @@ export function PrintStrengthsWeaknesses({ result }) {
           <div>
             <div style={{ fontSize: '11px', fontWeight: 700, color: '#059669', marginBottom: '4px' }}>강점</div>
             {result.strengths.map((s, i) => (
-              <div key={i} style={{
+              <div key={i} className="print-item" style={{
                 fontSize: '11px', color: '#374151', lineHeight: 1.5,
                 padding: '3px 8px', borderLeft: '2px solid #10b981', marginBottom: '3px',
               }}>
@@ -41,7 +41,7 @@ export function PrintStrengthsWeaknesses({ result }) {
           <div>
             <div style={{ fontSize: '11px', fontWeight: 700, color: '#dc2626', marginBottom: '4px' }}>약점</div>
             {result.weaknesses.map((w, i) => (
-              <div key={i} style={{
+              <div key={i} className="print-item" style={{
                 fontSize: '11px', color: '#374151', lineHeight: 1.5,
                 padding: '3px 8px', borderLeft: '2px solid #f43f5e', marginBottom: '3px',
               }}>
@@ -57,7 +57,7 @@ export function PrintStrengthsWeaknesses({ result }) {
         <div>
           <div style={{ fontSize: '11px', fontWeight: 700, color: '#6366f1', marginBottom: '4px' }}>보완 제안</div>
           {result.improvementSuggestions.map((s, i) => (
-            <div key={i} style={{
+            <div key={i} className="print-item" style={{
               fontSize: '11px', color: '#374151', lineHeight: 1.5,
               padding: '3px 8px', borderLeft: '2px solid #a5b4fc', marginBottom: '3px',
             }}>

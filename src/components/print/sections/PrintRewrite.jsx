@@ -14,7 +14,7 @@ export function PrintRewrite({ result }) {
   const bytes = calcNeisBytes(text);
 
   return (
-    <PrintSection title="재작성 제안 (AI 대안 문장)" description={PRINT_DESCRIPTIONS.rewrite}>
+    <PrintSection title="재작성 제안 (AI 대안 문장)" description={PRINT_DESCRIPTIONS.rewrite} avoidBreak>
 
       {/* NEIS 바이트 수 — 핵심 수치이므로 볼드+음영 강조 */}
       <div style={{ fontSize: '10px', color: '#64748b', textAlign: 'right', marginBottom: '6px' }}>

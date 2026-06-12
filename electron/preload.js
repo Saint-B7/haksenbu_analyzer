@@ -26,6 +26,11 @@ contextBridge.exposeInMainWorld('electronAPI', {
   // 항상 resolve (절대 reject하지 않음) — api-bridge.testOpenRouter 참고
   testLLMConnection: (args) => ipcRenderer.invoke('test-llm-connection', args),
 
+  // ── 남은 크레딧(USD) 조회 ───────────────────────────────────────────────────
+  // 저장된 키 기반으로 OpenRouter /credits 호출 → { remaining } | null
+  // 키 없음·조회 실패 시 null (UI는 뱃지를 숨김)
+  getCredits: () => ipcRenderer.invoke('get-credits'),
+
   // ── 외부 브라우저 열기 ──────────────────────────────────────────────────────
   // openrouter.ai 도메인만 허용 (main.js에서 검증)
   openExternal: (url) => ipcRenderer.invoke('open-external', url),

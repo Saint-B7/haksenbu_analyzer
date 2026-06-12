@@ -22,7 +22,7 @@ import { app, BrowserWindow, ipcMain, safeStorage, shell } from 'electron';
 import { join } from 'path';
 import Store from 'electron-store';
 import { autoUpdater } from 'electron-updater';
-import { callOpenRouter, testOpenRouter } from './api-bridge.js';
+import { callOpenRouter, testOpenRouter, getOpenRouterCredits } from './api-bridge.js';
 import { setupUpdater } from './updater.js';
 
 // 앱 설정 저장소 (선택한 모델명 등 평문 설정)
@@ -45,6 +45,9 @@ function createWindow() {
       contextIsolation: true,   // 보안: preload ↔ renderer 컨텍스트 분리
     },
     title: '학생부 문장 분석기',
+    // 작업표시줄·창 아이콘. 패키징 .exe 의 파일 아이콘은 electron-builder 의
+    // win.icon 이 담당하고, 이 옵션은 개발 모드와 창 아이콘에 적용된다.
+    icon: join(__dirname, '../build/icon.ico'),
     show: false,
   });
 
@@ -103,6 +106,24 @@ ipcMain.handle('set-setting', (_event, key, value) => store.set(key, value));
 // testOpenRouter는 절대 throw하지 않고 { ok, ... } 객체를 반환함.
 ipcMain.handle('test-llm-connection', (_event, { apiKey, model }) => {
   return testOpenRouter({ apiKey, model });
+});
+
+// ── IPC 핸들러: 남은 크레딧(USD) 조회 ────────────────────────────────────────
+// 저장된 키를 복호화해 OpenRouter /credits 를 호출. 키가 없거나 복호화·조회가
+// 실패하면 조용히 null 반환 (UI는 뱃지를 숨김 — 에러 배너 띄우지 않음).
+ipcMain.handle('get-credits', async () => {
+  const encBase64 = store.get('apiKeyEncrypted');
+  if (!encBase64) return null;
+
+  let apiKey;
+  try {
+    apiKey = safeStorage.decryptString(Buffer.from(encBase64, 'base64'));
+  } catch {
+    return null;
+  }
+
+  const result = await getOpenRouterCredits({ apiKey });
+  return result.ok ? { remaining: result.remaining } : null;
 });
 
 // ── IPC 핸들러: 외부 브라우저로 URL 열기 ─────────────────────────────────────

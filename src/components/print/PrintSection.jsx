@@ -28,9 +28,11 @@ export const PRINT_TOKENS = {
 
 /**
  * 인쇄 보고서 항목 카드.
- * @param {{ title: string, description?: string, icon?: React.ReactNode, children: React.ReactNode }} props
+ * @param {{ title: string, description?: string, icon?: React.ReactNode, avoidBreak?: boolean, children: React.ReactNode }} props
+ *   avoidBreak=true 면 섹션 전체를 페이지 중간에서 쪼개지 않는다(작은 섹션 전용 —
+ *   큰 섹션에 쓰면 통째로 다음 장으로 밀려 빈 공간이 생기므로 금지).
  */
-export function PrintSection({ title, description, icon, children }) {
+export function PrintSection({ title, description, icon, avoidBreak = false, children }) {
   return (
     <div className="print-section" style={{
       border: `1px solid ${PRINT_TOKENS.border}`,
@@ -39,9 +41,14 @@ export function PrintSection({ title, description, icon, children }) {
       marginBottom: '20px',
       background: '#ffffff',
       color: PRINT_TOKENS.titleColor,
+      ...(avoidBreak ? { breakInside: 'avoid' } : {}),
     }}>
-      {/* 제목 띠 — 좌측 인디고 보더로 항목 시작 강조 */}
-      <div style={{ borderLeft: `3px solid ${PRINT_TOKENS.accent}`, paddingLeft: '10px' }}>
+      {/* 제목 띠 — 좌측 인디고 보더로 항목 시작 강조.
+          breakAfter/breakInside avoid 로 제목이 페이지 맨 아래 고아로 남지 않게 한다. */}
+      <div style={{
+        borderLeft: `3px solid ${PRINT_TOKENS.accent}`, paddingLeft: '10px',
+        breakAfter: 'avoid', breakInside: 'avoid',
+      }}>
         <div style={{
           display: 'flex', alignItems: 'center', gap: '6px',
           fontSize: '17px', fontWeight: 800, color: PRINT_TOKENS.titleColor, lineHeight: 1.3,

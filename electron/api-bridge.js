@@ -15,6 +15,7 @@
 import { parseAnalysisJson } from '../src/lib/json-recovery.js';
 
 const OPENROUTER_URL = 'https://openrouter.ai/api/v1/chat/completions';
+const CREDITS_URL    = 'https://openrouter.ai/api/v1/credits';
 const ERR_DIAG_LEN = 400;   // 오류 진단 본문 최대 길이
 const TEST_BODY_LEN = 200;  // 테스트 오류 원문 최대 길이
 
@@ -141,5 +142,40 @@ export const testOpenRouter = async ({ apiKey, model }) => {
   } catch (e) {
     // fetch 자체 실패 (네트워크 단절, DNS 오류 등)
     return { ok: false, statusCode: null, message: e.message, rawMsg: null };
+  }
+};
+
+/**
+ * OpenRouter 남은 크레딧(USD) 조회 — GET /api/v1/credits.
+ *
+ * OpenRouter는 "토큰"이 아니라 "크레딧(USD)" 잔액을 제공한다.
+ * 응답: { data: { total_credits, total_usage } } → 남은 = total_credits - total_usage.
+ * 헤더는 공통 빌더로 ASCII 보장(ByteString 오류 방지).
+ *
+ * 절대 throw 하지 않는다(연결 테스트와 동일 — 조회 실패 시 UI는 조용히 숨김).
+ *
+ * @param {{ apiKey: string }} args
+ * @returns {Promise<
+ *   | { ok: true,  remaining: number, total: number, usage: number }
+ *   | { ok: false }
+ * >}
+ */
+export const getOpenRouterCredits = async ({ apiKey }) => {
+  try {
+    const res = await fetch(CREDITS_URL, {
+      method: 'GET',
+      headers: buildOpenRouterHeaders(apiKey),
+    });
+    if (!res.ok) return { ok: false };
+
+    const data = await res.json();
+    const total = Number(data?.data?.total_credits);
+    const usage = Number(data?.data?.total_usage);
+    if (!Number.isFinite(total) || !Number.isFinite(usage)) return { ok: false };
+
+    return { ok: true, remaining: total - usage, total, usage };
+  } catch {
+    // 네트워크 단절·DNS 오류 등 — 조용히 실패
+    return { ok: false };
   }
 };

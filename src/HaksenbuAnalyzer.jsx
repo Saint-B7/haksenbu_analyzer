@@ -128,6 +128,16 @@ export default function HaksenbuAnalyzer() {
   const [apiKeyToast, setApiKeyToast] = useState(false);
   // 자동 업데이트 상태: null | { type, percent?, info?, message? }
   const [updateStatus, setUpdateStatus] = useState(null);
+  // OpenRouter 남은 크레딧(USD): null = 미표시(키 없음·조회 실패), number = 표시
+  const [credits, setCredits] = useState(null);
+
+  // 남은 크레딧 갱신 — 저장된 키 기반. 실패 시 조용히 null(뱃지 숨김), 폴링 없음.
+  const refreshCredits = () => {
+    if (!isElectronEnv || !window.electronAPI?.getCredits) return;
+    window.electronAPI.getCredits()
+      .then((c) => setCredits(c && typeof c.remaining === 'number' ? c.remaining : null))
+      .catch(() => setCredits(null));
+  };
 
   // 학년·항목 변경 시 localStorage에 저장
   useEffect(() => { savePrefs({ grade, activityType }); }, [grade, activityType]);
@@ -138,12 +148,13 @@ export default function HaksenbuAnalyzer() {
     _debouncedSave.current({ text, careerGoal, desiredMajor });
   }, [text, careerGoal, desiredMajor]);
 
-  // 앱 마운트 시 키 존재 여부를 한 번 조회
+  // 앱 마운트 시 키 존재 여부 + 남은 크레딧을 한 번씩 조회
   useEffect(() => {
     if (!isElectronEnv) return;
     window.electronAPI.hasApiKey()
       .then(setApiKeyReady)
       .catch(() => setApiKeyReady(null));
+    refreshCredits();
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   // 자동 업데이트 IPC 구독 (패키징된 앱에서만 updater가 동작)
@@ -152,20 +163,22 @@ export default function HaksenbuAnalyzer() {
     return window.electronAPI.onUpdateStatus(setUpdateStatus);
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // 설정 모달에서 테스트 성공 후 호출 → 배너 숨김 + 토스트
+  // 설정 모달에서 테스트 성공 후 호출 → 배너 숨김 + 토스트 + 크레딧 갱신
   const handleKeyConnected = () => {
     setApiKeyReady(true);
     setApiKeyToast(true);
     setTimeout(() => setApiKeyToast(false), 1500);
+    refreshCredits();
   };
 
-  // 설정 모달 닫힘 → 키 상태 재동기화 (삭제 케이스 포함)
+  // 설정 모달 닫힘 → 키 상태 재동기화 (삭제 케이스 포함) + 크레딧 갱신
   const handleSettingsClose = () => {
     setSettingsOpen(false);
     if (isElectronEnv) {
       window.electronAPI.hasApiKey()
         .then(setApiKeyReady)
         .catch(() => {});
+      refreshCredits();
     }
   };
 
@@ -669,13 +682,26 @@ export default function HaksenbuAnalyzer() {
                 aria-label="API 키 및 사용량 설정 열기"
               >
                 {/* Coins 아이콘: API 키가 "사용 토큰을 차감받는 통로"임을 시각적으로 표현 */}
-                {/* TODO: 이후 라운드에서 잔액 실시간 표시 기능 추가 가능 (Coins 아이콘 아래 작은 숫자 뱃지 형태) */}
                 <Coins className="w-5 h-5" />
                 {/* 키 미설정 시 빨간 점 알림 배지 — Coins 우상단 */}
                 {apiKeyReady === false && (
                   <span className="absolute -top-1 -right-1 w-2 h-2 bg-rose-500 rounded-full ring-2 ring-white dark:ring-slate-900" />
                 )}
               </button>
+            )}
+            {/* 남은 크레딧(USD) 뱃지 — 키 연결 + 조회 성공 시에만 표시.
+                $0.5 미만이면 노란 경고 톤으로 잔액 부족을 환기. 다크모드 대응. */}
+            {isElectronEnv && credits != null && (
+              <span
+                className={`text-xs px-2.5 py-1 rounded-full border font-medium whitespace-nowrap ${
+                  credits < 0.5
+                    ? 'bg-amber-50 dark:bg-amber-900/40 text-amber-700 dark:text-amber-300 border-amber-200 dark:border-amber-700'
+                    : 'bg-emerald-50 dark:bg-emerald-900/40 text-emerald-700 dark:text-emerald-300 border-emerald-200 dark:border-emerald-700'
+                }`}
+                title="OpenRouter 남은 크레딧"
+              >
+                남은 크레딧 ${credits.toFixed(2)}
+              </span>
             )}
             {/* 자동 업데이트 상태 배지 */}
             {isElectronEnv && updateStatus?.type === 'downloading' && (

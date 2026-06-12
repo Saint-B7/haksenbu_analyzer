@@ -35,6 +35,42 @@
   box-shadow: 0 4px 24px rgba(0, 0, 0, 0.12);
 }
 
+/* ── A4 페이지 경계 시각화 (화면 전용) ──
+   보고서 콘텐츠는 한 컬럼으로 자연스럽게 흐르고, 그 위에 한 페이지 콘텐츠
+   높이(≈1047px = 1123 − 1cm×2)마다 점선 + "── N페이지 ──" 라벨을 오버레이로
+   그린다. 콘텐츠를 밀어내지 않는 절대배치이며, .no-print 로 인쇄 시 사라진다.
+   페이지 나뉨의 시각적 가이드일 뿐, 실제 break 정밀도는 Phase 2의 break 규칙이 담당. */
+.print-content {
+  position: relative;
+}
+
+/* 페이지 경계 점선 — 콘텐츠 폭 전체를 가로지른다 */
+.print-page-divider {
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 0;
+  border-top: 1px dashed #cbd5e1;
+  pointer-events: none;
+}
+
+/* 경계 위 가운데 알약 배지 — "── N페이지 ──" */
+.print-page-label {
+  position: absolute;
+  top: -9px;
+  left: 50%;
+  transform: translateX(-50%);
+  padding: 1px 10px;
+  background: #f1f5f9;
+  border: 1px solid #e2e8f0;
+  border-radius: 9999px;
+  font-size: 10px;
+  font-weight: 700;
+  color: #94a3b8;
+  letter-spacing: 1px;
+  white-space: nowrap;
+}
+
 /* 상단 툴바 — sticky, 인쇄 시 숨김 */
 .print-toolbar {
   position: sticky;
@@ -64,12 +100,14 @@
   break-inside: avoid;
 }
 
-/* 표지 */
+/* 표지 — 컴팩트 헤더(풀 타이틀 페이지가 아님). 단독 페이지로 강제하면 거의 빈
+   페이지가 생기므로 break-after:page 대신 쪼개짐만 막는다(break-inside:avoid). */
 .print-cover {
   text-align: center;
   padding-bottom: 36px;
   margin-bottom: 36px;
   border-bottom: 1px solid #e2e8f0;
+  break-inside: avoid;
 }
 
 .print-cover-eyebrow {
@@ -115,6 +153,11 @@
 @media print {
   /* 툴바 숨김 */
   .print-toolbar {
+    display: none !important;
+  }
+
+  /* 화면 전용 요소(페이지 경계 점선·라벨 등) 숨김 */
+  .no-print {
     display: none !important;
   }
 
