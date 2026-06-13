@@ -38,11 +38,11 @@ jobs:
 
       # ── Windows NSIS 설치 파일 빌드 + GitHub Releases 업로드 ────────────────
       #   --publish always: latest.yml + .exe + .blockmap 을 Release 에 자동 등록
-      #   GH_TOKEN: 수동 등록 PAT(secrets.GH_TOKEN)가 있으면 사용, 없으면 Actions
-      #   내장 GITHUB_TOKEN 으로 폴백. 내장 토큰은 항상 존재하고 위 permissions의
+      #   GH_TOKEN: Actions 내장 GITHUB_TOKEN 직접 사용. 위 permissions의
       #   contents:write 로 같은 레포에 릴리즈를 생성·업로드할 수 있다.
-      #   (이전엔 미등록 secrets.GH_TOKEN 으로 인해 발행 단계가 매번 실패했음)
+      #   (수동 PAT secrets.GH_TOKEN 은 미등록/만료 시 발행이 매번 실패하므로
+      #    의존하지 않는다 — 내장 토큰은 항상 존재한다.)
       - name: Build & Publish (Windows)
         run: npm run build && npx electron-builder --win --x64 --publish always
         env:
-          GH_TOKEN: ${{ secrets.GH_TOKEN || secrets.GITHUB_TOKEN }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
