@@ -714,6 +714,27 @@ export default function HaksenbuAnalyzer() {
                 새 버전 감지됨
               </span>
             )}
+            {/* 다운로드 완료 → 사용자가 직접 설치(재시작) 트리거. 이게 없으면 즉시
+                설치가 진행되지 않는다(autoInstallOnAppQuit으로 다음 종료 시에야 적용). */}
+            {isElectronEnv && updateStatus?.type === 'downloaded' && (
+              <button
+                onClick={() => window.electronAPI.installUpdate()}
+                className="text-xs px-2.5 py-1 bg-indigo-600 hover:bg-indigo-700 text-white rounded-full font-medium whitespace-nowrap transition-colors duration-150"
+                title="다운로드된 새 버전을 설치하고 앱을 재시작합니다"
+              >
+                새 버전 준비됨 · 지금 설치
+              </button>
+            )}
+            {/* 업데이트 확인 실패 — 조용한 실패로는 원인 파악이 안 되므로 작게 노출.
+                상세 메시지는 title(툴팁)로 제공. */}
+            {isElectronEnv && updateStatus?.type === 'error' && (
+              <span
+                className="text-xs px-2.5 py-1 bg-amber-50 dark:bg-amber-900/40 text-amber-700 dark:text-amber-300 rounded-full border border-amber-200 dark:border-amber-700 font-medium whitespace-nowrap"
+                title={`업데이트 확인 실패: ${updateStatus.message || '알 수 없는 오류'}`}
+              >
+                업데이트 확인 실패
+              </span>
+            )}
           </div>
           <p className="text-sm text-slate-600 dark:text-slate-400">
             기록의 가치를 높이는 학생부 문장 진단 솔루션
