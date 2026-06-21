@@ -62,7 +62,7 @@ export const TopTierCheckCard = ({ topTierCheck, topTierMetCount, forceOpen = fa
       {isOpen && (
         <>
           {/* 도약 10기준 레이더 — saveable-remove-chart-container는 HTML 저장 시 제거 마커 */}
-          <div className="p-5 sm:p-6 bg-rose-50/30 border-b border-rose-100 saveable-remove-chart-container">
+          <div className="p-5 sm:p-6 bg-rose-50/30 dark:bg-rose-900/15 border-b border-rose-100 dark:border-rose-800/40 saveable-remove-chart-container">
             <TopTierRadar check={topTierCheck} />
           </div>
 

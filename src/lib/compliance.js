@@ -136,8 +136,10 @@ export const detectComplianceViolations = (text) => {
   return { matches, summary };
 };
 
+// bg/text/border 는 라이트 + dark: 변형을 함께 둔다(다크에서 통계·뱃지가 밝게 뜨지 않도록).
+// highlight(본문 형광펜)는 의도된 강조 마커라 라이트 톤 유지.
 export const SEVERITY_META = {
-  critical: { label: '절대 금지', color: 'rose',   bg: 'bg-rose-50',   text: 'text-rose-800',   border: 'border-rose-300',   highlight: 'bg-rose-200/70' },
-  high:     { label: '주의',      color: 'orange', bg: 'bg-orange-50', text: 'text-orange-800', border: 'border-orange-300', highlight: 'bg-orange-200/70' },
-  warning:  { label: '검토 필요', color: 'amber',  bg: 'bg-amber-50',  text: 'text-amber-800',  border: 'border-amber-300',  highlight: 'bg-amber-200/70' },
+  critical: { label: '절대 금지', color: 'rose',   bg: 'bg-rose-50 dark:bg-rose-900/30',   text: 'text-rose-800 dark:text-rose-300',   border: 'border-rose-300 dark:border-rose-700',   highlight: 'bg-rose-200/70' },
+  high:     { label: '주의',      color: 'orange', bg: 'bg-orange-50 dark:bg-orange-900/30', text: 'text-orange-800 dark:text-orange-300', border: 'border-orange-300 dark:border-orange-700', highlight: 'bg-orange-200/70' },
+  warning:  { label: '검토 필요', color: 'amber',  bg: 'bg-amber-50 dark:bg-amber-900/30',  text: 'text-amber-800 dark:text-amber-300',  border: 'border-amber-300 dark:border-amber-700',  highlight: 'bg-amber-200/70' },
 };

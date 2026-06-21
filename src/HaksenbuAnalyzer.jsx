@@ -14,9 +14,10 @@ import {
   GraduationCap, Layers,
   Flame, Info, BarChart3, Network, Briefcase, RotateCcw,
   Users, Download, Target, CheckCircle2, XCircle, Coins,
-  Sun, Moon, Printer,
+  Sun, Moon, Printer, HelpCircle,
 } from 'lucide-react';
 import SettingsModal from './components/SettingsModal';
+import HelpModal from './components/HelpModal';
 import PrintDialog from './components/print/PrintDialog.jsx';
 import PrintReportView from './components/print/PrintReportView.jsx';
 import { useTheme } from './contexts/ThemeContext.jsx';
@@ -115,6 +116,7 @@ export default function HaksenbuAnalyzer() {
 
   // 설정 모달 (Electron 전용 — API 키 / 모델 선택)
   const [settingsOpen, setSettingsOpen] = useState(false);
+  const [helpOpen, setHelpOpen] = useState(false);
   const isElectronEnv = typeof window !== 'undefined' && window.electronAPI != null;
 
   // 인쇄 보고서 — 섹션 선택 다이얼로그 + 미리보기 뷰
@@ -683,6 +685,15 @@ export default function HaksenbuAnalyzer() {
                 ? <Sun className="w-5 h-5" />
                 : <Moon className="w-5 h-5" />}
             </button>
+            {/* 도움말 버튼 — 사용 가이드 모달 열기 */}
+            <button
+              onClick={() => setHelpOpen(true)}
+              className="p-2 rounded-lg text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors duration-150"
+              title="도움말 · 사용 가이드"
+              aria-label="도움말 열기"
+            >
+              <HelpCircle className="w-5 h-5" />
+            </button>
             {isElectronEnv && (
               <button
                 onClick={() => setSettingsOpen(true)}
@@ -758,6 +769,9 @@ export default function HaksenbuAnalyzer() {
             onKeyConnected={handleKeyConnected}
           />
         )}
+
+        {/* 도움말 모달 (웹·Electron 공통) */}
+        <HelpModal open={helpOpen} onClose={() => setHelpOpen(false)} appVersion={appVersion} />
 
         {/* 인쇄 섹션 선택 다이얼로그 — 결과가 있을 때만 의미 있음 */}
         <PrintDialog

@@ -232,7 +232,7 @@ export const MultiPerspectiveCard = ({ multi, forceOpen = false }) => {
 
             {/* 의견 충돌 포인트 */}
             {consensus.conflictPoints?.length > 0 && (
-              <div className="bg-amber-50/50 rounded-xl border border-amber-200 dark:border-amber-700 p-5">
+              <div className="bg-amber-50/50 dark:bg-amber-900/20 rounded-xl border border-amber-200 dark:border-amber-700 p-5">
                 <div className="flex items-center gap-2 mb-3 flex-wrap">
                   <Zap className="w-5 h-5 text-amber-600" />
                   <h3 className="text-base font-bold text-slate-900 dark:text-slate-100">의견 충돌 지점</h3>

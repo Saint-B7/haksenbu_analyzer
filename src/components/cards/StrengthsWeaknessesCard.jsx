@@ -38,7 +38,7 @@ export const StrengthsWeaknessesCard = ({ strengths, weaknesses, suggestions, fo
           </div>
           <ul className="grid grid-cols-1 sm:grid-cols-2 gap-2">
             {strengths.map((s, i) => (
-              <li key={i} className="text-sm text-slate-800 dark:text-slate-200 leading-relaxed bg-emerald-50/60 border-l-4 border-emerald-400 rounded-r px-3 py-2">
+              <li key={i} className="text-sm text-slate-800 dark:text-slate-200 leading-relaxed bg-emerald-50/60 dark:bg-emerald-900/20 border-l-4 border-emerald-400 dark:border-emerald-500 rounded-r px-3 py-2">
                 <RichText text={s} />
               </li>
             ))}
@@ -64,23 +64,23 @@ export const StrengthsWeaknessesCard = ({ strengths, weaknesses, suggestions, fo
                 return (
                   <div key={i} className="grid grid-cols-1 md:grid-cols-2 gap-2 items-stretch">
                     {/* 좌: 약점 */}
-                    <div className="bg-amber-50/60 border-l-4 border-amber-400 rounded-r px-3 py-2.5">
+                    <div className="bg-amber-50/60 dark:bg-amber-900/20 border-l-4 border-amber-400 dark:border-amber-500 rounded-r px-3 py-2.5">
                       <div className="text-[10px] font-bold text-amber-700 dark:text-amber-300 uppercase tracking-wide mb-1">약점 {i + 1}</div>
                       {w ? (
                         <p className="text-sm text-slate-800 dark:text-slate-200 leading-relaxed"><RichText text={w} /></p>
                       ) : (
-                        <p className="text-xs text-slate-400 italic">대응 약점 없음</p>
+                        <p className="text-xs text-slate-400 dark:text-slate-500 italic">대응 약점 없음</p>
                       )}
                     </div>
                     {/* 우: 보완 액션 */}
-                    <div className="bg-indigo-50/60 border-l-4 border-indigo-400 rounded-r px-3 py-2.5 flex items-start gap-2">
+                    <div className="bg-indigo-50/60 dark:bg-indigo-900/20 border-l-4 border-indigo-400 dark:border-indigo-500 rounded-r px-3 py-2.5 flex items-start gap-2">
                       <Lightbulb className="w-3.5 h-3.5 text-indigo-600 flex-shrink-0 mt-0.5" />
                       <div className="flex-1 min-w-0">
                         <div className="text-[10px] font-bold text-indigo-700 dark:text-indigo-300 uppercase tracking-wide mb-1">보완 액션 {i + 1}</div>
                         {sug ? (
                           <p className="text-sm text-slate-800 dark:text-slate-200 leading-relaxed"><RichText text={sug} /></p>
                         ) : (
-                          <p className="text-xs text-slate-400 italic">제안 없음</p>
+                          <p className="text-xs text-slate-400 dark:text-slate-500 italic">제안 없음</p>
                         )}
                       </div>
                     </div>

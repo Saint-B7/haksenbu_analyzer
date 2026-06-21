@@ -122,9 +122,11 @@ export const EVALUATORS = [
   },
 ];
 
+// ring/bg/text 는 라이트 + dark: 변형을 함께 둔다(다크에서 카테고리 박스가 밝게 뜨지 않도록).
+// 인쇄(PrintRoadmap)는 label 만 사용하므로 dark: 추가는 인쇄에 영향 없음.
 export const ROADMAP_CATEGORIES = [
-  { key: 'depthDeepening',     label: '깊이 심화',       icon: Microscope,   ring: 'border-indigo-200',  dot: 'bg-indigo-500',  bg: 'bg-indigo-50',   text: 'text-indigo-700',   desc: '현재 본문 주제를 한 단계 더 깊이 파고드는 방향' },
-  { key: 'majorAligned',       label: '희망 학과 맞춤',  icon: GraduationCap, ring: 'border-purple-200',  dot: 'bg-purple-500',  bg: 'bg-purple-50',   text: 'text-purple-700',   desc: '희망 학과의 핵심 개념·방법론과 연결되는 방향' },
-  { key: 'careerAligned',      label: '진로 맞춤',       icon: Briefcase,     ring: 'border-emerald-200', dot: 'bg-emerald-500', bg: 'bg-emerald-50',  text: 'text-emerald-700',  desc: '진로 희망의 실무·실천 맥락으로 확장하는 방향' },
-  { key: 'crossDisciplinary',  label: '융합·확장',       icon: Network,       ring: 'border-amber-200',   dot: 'bg-amber-500',   bg: 'bg-amber-50',    text: 'text-amber-700',    desc: '인접 학문·다른 교과와 구조적으로 연결하는 방향' },
+  { key: 'depthDeepening',     label: '깊이 심화',       icon: Microscope,   ring: 'border-indigo-200 dark:border-indigo-700',  dot: 'bg-indigo-500',  bg: 'bg-indigo-50 dark:bg-indigo-900/20',   text: 'text-indigo-700 dark:text-indigo-300',   desc: '현재 본문 주제를 한 단계 더 깊이 파고드는 방향' },
+  { key: 'majorAligned',       label: '희망 학과 맞춤',  icon: GraduationCap, ring: 'border-purple-200 dark:border-purple-700',  dot: 'bg-purple-500',  bg: 'bg-purple-50 dark:bg-purple-900/20',   text: 'text-purple-700 dark:text-purple-300',   desc: '희망 학과의 핵심 개념·방법론과 연결되는 방향' },
+  { key: 'careerAligned',      label: '진로 맞춤',       icon: Briefcase,     ring: 'border-emerald-200 dark:border-emerald-700', dot: 'bg-emerald-500', bg: 'bg-emerald-50 dark:bg-emerald-900/20',  text: 'text-emerald-700 dark:text-emerald-300',  desc: '진로 희망의 실무·실천 맥락으로 확장하는 방향' },
+  { key: 'crossDisciplinary',  label: '융합·확장',       icon: Network,       ring: 'border-amber-200 dark:border-amber-700',   dot: 'bg-amber-500',   bg: 'bg-amber-50 dark:bg-amber-900/20',    text: 'text-amber-700 dark:text-amber-300',    desc: '인접 학문·다른 교과와 구조적으로 연결하는 방향' },
 ];

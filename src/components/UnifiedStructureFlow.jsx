@@ -81,8 +81,8 @@ const StructureStageBox = ({ item, stageIdx }) => {
 
       {/* 단계별 대안 문장 — 어떻게 한 단계 발전시킬지 제시 */}
       {item.stageRewrite && (
-        <div className="text-xs text-indigo-800 dark:text-indigo-200 leading-relaxed mt-1 mb-2 p-2 bg-indigo-50/70 border-l-3 border-indigo-400 rounded-r">
-          <span className="font-bold text-indigo-600">대안 문장 · </span>
+        <div className="text-xs text-indigo-800 dark:text-indigo-200 leading-relaxed mt-1 mb-2 p-2 bg-indigo-50/70 dark:bg-indigo-900/30 border-l-3 border-indigo-400 dark:border-indigo-500 rounded-r">
+          <span className="font-bold text-indigo-600 dark:text-indigo-300">대안 문장 · </span>
           <RichText text={item.stageRewrite} />
         </div>
       )}

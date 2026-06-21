@@ -51,13 +51,13 @@ export const PromotionRoadmapCard = ({ roadmap, careerGoal, desiredMajor, forceO
         <>
           {/* (1) 분석 결과 즉시 적용 — 탐구 활동 추천 */}
           {currentApps.length > 0 && (
-            <div className="p-5 sm:p-6 bg-amber-50/40 border-b border-amber-100 roadmap-section">
+            <div className="p-5 sm:p-6 bg-amber-50/40 dark:bg-amber-900/15 border-b border-amber-100 dark:border-amber-800/40 roadmap-section">
               <div className="flex items-center gap-2 mb-4 flex-wrap">
                 <div className="w-9 h-9 rounded-lg bg-amber-500 text-white flex items-center justify-center">
                   <Compass className="w-5 h-5" />
                 </div>
                 <h3 className="text-lg font-bold text-slate-900 dark:text-slate-100">탐구 활동 추천</h3>
-                <span className="text-xs text-amber-700 dark:text-amber-300 bg-amber-100 px-2 py-0.5 rounded-full font-bold">분석 결과 즉시 적용</span>
+                <span className="text-xs text-amber-700 dark:text-amber-300 bg-amber-100 dark:bg-amber-900/40 px-2 py-0.5 rounded-full font-bold">분석 결과 즉시 적용</span>
                 <InfoTooltip content="현재 분석에서 드러난 약점·보완점을 지금 학기 또는 다음 학기 안에 메울 수 있는 구체적 후속 활동입니다. 학년이 올라가기를 기다리지 않고 바로 시도할 수 있는 추천입니다." />
               </div>
               <p className="text-xs text-slate-600 dark:text-slate-400 leading-relaxed mb-4">
