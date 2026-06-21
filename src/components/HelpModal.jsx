@@ -2,13 +2,14 @@
 // HelpModal — 초기 화면 '도움말' 버튼으로 여는 사용 가이드
 //
 // 사용자가 궁금해할 점(FAQ)과 사용법을 직관적으로 정리한다.
-// SettingsModal과 동일한 모달 셸(오버레이·Esc·스크롤·다크 톤)을 따른다.
+// SettingsModal과 동일한 모달 셸(오버레이·Esc·스크롤·다크 톤)을 따르며,
+// 접근성을 위해 열릴 때 초기 포커스 이동 + Tab 포커스 트랩을 적용한다.
 // 인쇄 보고서와 무관한 화면 전용 UI이므로 다크모드를 정식 지원한다.
 // ──────────────────────────────────────────────────────────
 
-import React, { useEffect } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import {
-  X, Sparkles, Coins, BarChart3, Printer,
+  X, Sparkles, Coins, BarChart3, Printer, Settings, RefreshCw,
   HelpCircle, Keyboard, ShieldCheck,
 } from 'lucide-react';
 
@@ -28,34 +29,81 @@ const Faq = ({ q, children }) => (
   </div>
 );
 
-// 단축키 한 줄
+// 단축키 키캡
 const Key = ({ children }) => (
   <kbd className="inline-block px-1.5 py-0.5 text-[11px] font-bold rounded border border-slate-300 dark:border-slate-600 bg-slate-50 dark:bg-slate-700 text-slate-700 dark:text-slate-200">
     {children}
   </kbd>
 );
 
+// 업데이트 상태 → 표시 텍스트·톤
+function updateLine(updateStatus, checked) {
+  const t = updateStatus?.type;
+  // 실제 업데이트 흐름(감지·다운로드)은 사용자가 확인을 안 눌렀어도 노출한다.
+  const activeFlow = t === 'available' || t === 'downloading' || t === 'downloaded';
+  if (!checked && !activeFlow) return null;
+  switch (t) {
+    case 'checking':      return { text: '업데이트 확인 중…', tone: 'slate' };
+    case 'not-available': return { text: '최신 버전입니다 ✓', tone: 'emerald' };
+    case 'available':     return { text: `새 버전 ${updateStatus.info?.version || ''} 감지됨 — 곧 다운로드됩니다`, tone: 'indigo' };
+    case 'downloading':   return { text: `새 버전 다운로드 중 ${updateStatus.percent ?? 0}%`, tone: 'indigo' };
+    case 'downloaded':    return { text: '설치 준비됨 — 헤더의 “지금 설치”를 눌러 주세요', tone: 'indigo' };
+    case 'error':         return { text: '업데이트 확인 실패 — 잠시 후 다시 시도해 주세요', tone: 'amber' };
+    default:              return { text: '업데이트 확인 중…', tone: 'slate' };
+  }
+}
+const TONE = {
+  slate:   'text-slate-500 dark:text-slate-400',
+  emerald: 'text-emerald-600 dark:text-emerald-400 font-semibold',
+  indigo:  'text-indigo-600 dark:text-indigo-300 font-semibold',
+  amber:   'text-amber-600 dark:text-amber-400 font-semibold',
+};
+
 /**
- * @param {{ open: boolean, onClose: () => void, appVersion?: string }} props
+ * @param {{
+ *   open: boolean, onClose: () => void, appVersion?: string,
+ *   isElectronEnv?: boolean, onOpenSettings?: () => void,
+ *   onCheckUpdate?: () => void, updateStatus?: object|null,
+ * }} props
  */
-export default function HelpModal({ open, onClose, appVersion }) {
-  // Esc 로 닫기 (모달이 열려 있을 때만)
+export default function HelpModal({ open, onClose, appVersion, isElectronEnv, onOpenSettings, onCheckUpdate, updateStatus }) {
+  const panelRef = useRef(null);
+  const closeBtnRef = useRef(null);
+  const [checkedUpdate, setCheckedUpdate] = useState(false);
+
+  // Esc 닫기 + 초기 포커스 + Tab 포커스 트랩 (열려 있을 때만)
   useEffect(() => {
     if (!open) return;
-    const onKey = (e) => { if (e.key === 'Escape') onClose(); };
+    setCheckedUpdate(false);
+    const onKey = (e) => {
+      if (e.key === 'Escape') { onClose(); return; }
+      if (e.key !== 'Tab') return;
+      const nodes = panelRef.current?.querySelectorAll(
+        'button:not([disabled]), [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
+      );
+      if (!nodes || nodes.length === 0) return;
+      const first = nodes[0], last = nodes[nodes.length - 1];
+      if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last.focus(); }
+      else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus(); }
+    };
     window.addEventListener('keydown', onKey);
-    return () => window.removeEventListener('keydown', onKey);
+    const t = setTimeout(() => closeBtnRef.current?.focus(), 0); // 초기 포커스
+    return () => { window.removeEventListener('keydown', onKey); clearTimeout(t); };
   }, [open, onClose]);
 
   if (!open) return null;
 
+  const handleCheck = () => { setCheckedUpdate(true); onCheckUpdate?.(); };
+  const handleOpenSettings = () => { onClose(); onOpenSettings?.(); };
+  const upd = isElectronEnv ? updateLine(updateStatus, checkedUpdate) : null;
+
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4" role="dialog" aria-modal="true" aria-label="도움말">
       {/* 배경 오버레이 */}
       <div className="absolute inset-0 bg-black/40" onClick={onClose} />
 
       {/* 모달 패널 */}
-      <div className="relative bg-white dark:bg-slate-800 rounded-2xl shadow-2xl w-full max-w-xl flex flex-col max-h-[90vh]">
+      <div ref={panelRef} className="relative bg-white dark:bg-slate-800 rounded-2xl shadow-2xl w-full max-w-xl flex flex-col max-h-[90vh]">
 
         {/* 헤더 */}
         <div className="flex items-center justify-between px-6 pt-5 pb-4 border-b border-slate-100 dark:border-slate-700 shrink-0">
@@ -64,6 +112,7 @@ export default function HelpModal({ open, onClose, appVersion }) {
             <h2 className="text-base font-bold text-slate-900 dark:text-slate-100">도움말 · 사용 가이드</h2>
           </div>
           <button
+            ref={closeBtnRef}
             onClick={onClose}
             aria-label="닫기"
             className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors"
@@ -75,12 +124,22 @@ export default function HelpModal({ open, onClose, appVersion }) {
         {/* 본문 (스크롤) */}
         <div className="overflow-y-auto flex-1 px-6 py-5 space-y-6">
 
-          {/* 소개 */}
-          <p className="text-[13px] text-slate-600 dark:text-slate-400 leading-relaxed">
-            <span className="font-bold text-slate-800 dark:text-slate-200">학생부 문장 분석기</span>는
-            입력한 학생부 문장을 입학사정관 관점으로 진단하고, 점수·강약점·대안 문장·기재요령 위반까지
-            한 번에 정리해 주는 도구입니다.
-          </p>
+          {/* 소개 + 빠른 액션 */}
+          <div>
+            <p className="text-[13px] text-slate-600 dark:text-slate-400 leading-relaxed">
+              <span className="font-bold text-slate-800 dark:text-slate-200">학생부 문장 분석기</span>는
+              입력한 학생부 문장을 입학사정관 관점으로 진단하고, 점수·강약점·대안 문장·기재요령 위반까지
+              한 번에 정리해 주는 도구입니다.
+            </p>
+            {isElectronEnv && (
+              <button
+                onClick={handleOpenSettings}
+                className="mt-3 inline-flex items-center gap-1.5 px-3 py-1.5 text-[13px] font-semibold rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white transition-colors"
+              >
+                <Settings className="w-4 h-4" /> 설정 열기 (API 키 연결)
+              </button>
+            )}
+          </div>
 
           {/* 빠른 시작 */}
           <section>
@@ -112,8 +171,8 @@ export default function HelpModal({ open, onClose, appVersion }) {
                 키는 기기에 <b>암호화 저장</b>되어 외부로 노출되지 않습니다.
               </Faq>
               <Faq q="비용은 어떻게 드나요?">
-                OpenRouter <b>크레딧(USD)</b>이 분석량만큼 차감됩니다. 키를 연결하면 헤더에
-                <b> 남은 크레딧</b>이 표시되고, <b>$0.5 미만</b>이면 노란색으로 부족을 알립니다.
+                OpenRouter <b>크레딧(USD)</b>이 분석량만큼 차감됩니다(1회 약 30~80원). 키를 연결하면 헤더에
+                <b> 남은 크레딧</b>이 표시되며, 분석 직후 자동으로 갱신됩니다. <b>$0.5 미만</b>이면 노란색으로 알립니다.
               </Faq>
               <Faq q="입력한 문장이 외부에 저장되나요?">
                 분석 시에만 OpenRouter로 전송되며 앱이 별도로 서버에 저장하지 않습니다.
@@ -124,12 +183,12 @@ export default function HelpModal({ open, onClose, appVersion }) {
                 (<b>1500바이트 ≈ 한글 500자</b>). 한도를 넘지 않게 다듬는 데 활용하세요.
               </Faq>
               <Faq q="결과가 안 나오거나 오류가 떠요.">
-                남은 크레딧과 인터넷 연결을 먼저 확인하세요. 응답이 잘린 경우 자동 복구를 시도하며,
-                그래도 비면 잠시 후 다시 분석해 주세요.
+                오류 메시지에 원인(크레딧 부족·네트워크·키 문제 등)과 <b>“다시 시도”</b> 버튼이 함께 표시됩니다.
+                남은 크레딧과 인터넷 연결을 확인한 뒤 다시 시도해 주세요.
               </Faq>
               <Faq q="업데이트는 어떻게 되나요?">
-                새 버전이 나오면 <b>자동으로 감지·다운로드</b>되고, 헤더에
-                <b> “지금 설치”</b> 버튼이 뜹니다. 클릭하면 재시작되며 적용됩니다.
+                새 버전이 나오면 <b>자동으로 감지·다운로드</b>되고, 헤더에 <b>“지금 설치”</b> 버튼이 뜹니다.
+                {isElectronEnv && ' 아래 “업데이트 확인”으로 지금 바로 확인할 수도 있습니다.'}
               </Faq>
             </div>
           </section>
@@ -173,12 +232,29 @@ export default function HelpModal({ open, onClose, appVersion }) {
             </div>
           </section>
 
+          {/* 앱 정보 / 업데이트 (Electron 전용) */}
+          {isElectronEnv && (
+            <section>
+              <SectionTitle icon={RefreshCw}>앱 정보 · 업데이트</SectionTitle>
+              <div className="flex items-center gap-3 flex-wrap">
+                <span className="text-[13px] text-slate-600 dark:text-slate-400">현재 버전 <b className="text-slate-800 dark:text-slate-200">v{appVersion || '-'}</b></span>
+                <button
+                  onClick={handleCheck}
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 text-[13px] font-semibold rounded-lg border border-slate-300 dark:border-slate-600 text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors"
+                >
+                  <RefreshCw className="w-3.5 h-3.5" /> 업데이트 확인
+                </button>
+                {upd && <span className={`text-[13px] ${TONE[upd.tone]}`}>{upd.text}</span>}
+              </div>
+            </section>
+          )}
+
           {/* 안내 푸터 */}
           <div className="flex items-start gap-2 text-xs text-slate-500 dark:text-slate-400 border-t border-slate-100 dark:border-slate-700 pt-4">
             <ShieldCheck className="w-4 h-4 flex-shrink-0 mt-0.5 text-emerald-600 dark:text-emerald-400" />
             <p className="leading-relaxed">
               자동 검사(기재요령 등)는 보조 도구이며 누락 가능성이 있으니, 최종 검토는 반드시
-              교사 본인이 수행하세요{appVersion ? ` · v${appVersion}` : ''}.
+              교사 본인이 수행하세요.
             </p>
           </div>
 

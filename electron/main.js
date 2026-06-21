@@ -142,6 +142,16 @@ ipcMain.handle('open-external', async (_event, url) => {
 // 업데이트 수동 설치 (다운로드 완료 후 사용자가 "지금 재시작" 클릭 시)
 ipcMain.handle('install-update', () => autoUpdater.quitAndInstall());
 
+// 업데이트 수동 확인 (도움말의 "업데이트 확인" 버튼). 결과는 기존 update-status 채널로 전달.
+// 패키징되지 않은 개발 환경에서는 autoUpdater가 동작하지 않으므로 조용히 무시.
+ipcMain.handle('check-for-updates', () => {
+  if (!app.isPackaged) return null;
+  return autoUpdater.checkForUpdates().catch((err) => {
+    console.warn('[updater] 수동 확인 실패:', err?.message);
+    return null;
+  });
+});
+
 // ── 앱 수명 관리 ──────────────────────────────────────────────────────────────
 
 app.whenReady().then(() => {

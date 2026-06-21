@@ -138,6 +138,12 @@ export default function HaksenbuAnalyzer() {
     typeof __APP_VERSION__ !== 'undefined' ? __APP_VERSION__ : ''
   );
 
+  // 업데이트 수동 확인 — 결과는 update-status 채널(onUpdateStatus)로 들어온다.
+  const handleCheckUpdate = () => {
+    if (!isElectronEnv || !window.electronAPI?.checkForUpdates) return;
+    window.electronAPI.checkForUpdates().catch(() => {});
+  };
+
   // 남은 크레딧 갱신 — 저장된 키 기반. 실패 시 조용히 null(뱃지 숨김), 폴링 없음.
   const refreshCredits = () => {
     if (!isElectronEnv || !window.electronAPI?.getCredits) return;
@@ -159,7 +165,15 @@ export default function HaksenbuAnalyzer() {
   useEffect(() => {
     if (!isElectronEnv) return;
     window.electronAPI.hasApiKey()
-      .then(setApiKeyReady)
+      .then((has) => {
+        setApiKeyReady(has);
+        // 첫 실행 온보딩 — 키가 아직 없으면 설정 가이드를 1회 자동 안내
+        // (localStorage 플래그로 매 실행 반복 방지)
+        if (!has && !localStorage.getItem('onboardedV1')) {
+          localStorage.setItem('onboardedV1', '1');
+          setSettingsOpen(true);
+        }
+      })
       .catch(() => setApiKeyReady(null));
     refreshCredits();
     // Electron 실제 앱 버전으로 헤더 갱신 (실패 시 빌드타임 폴백 유지)
@@ -732,8 +746,11 @@ export default function HaksenbuAnalyzer() {
               </span>
             )}
             {isElectronEnv && updateStatus?.type === 'available' && (
-              <span className="text-xs px-2.5 py-1 bg-emerald-50 dark:bg-emerald-900/40 text-emerald-700 dark:text-emerald-300 rounded-full border border-emerald-200 dark:border-emerald-700 font-medium">
-                새 버전 감지됨
+              <span
+                className="text-xs px-2.5 py-1 bg-emerald-50 dark:bg-emerald-900/40 text-emerald-700 dark:text-emerald-300 rounded-full border border-emerald-200 dark:border-emerald-700 font-medium"
+                title={typeof updateStatus.info?.releaseNotes === 'string' ? updateStatus.info.releaseNotes.replace(/<[^>]+>/g, '').slice(0, 300) : undefined}
+              >
+                새 버전 {updateStatus.info?.version ? `v${updateStatus.info.version} ` : ''}감지됨
               </span>
             )}
             {/* 다운로드 완료 → 사용자가 직접 설치(재시작) 트리거. 이게 없으면 즉시
@@ -773,7 +790,15 @@ export default function HaksenbuAnalyzer() {
         )}
 
         {/* 도움말 모달 (웹·Electron 공통) */}
-        <HelpModal open={helpOpen} onClose={() => setHelpOpen(false)} appVersion={appVersion} />
+        <HelpModal
+          open={helpOpen}
+          onClose={() => setHelpOpen(false)}
+          appVersion={appVersion}
+          isElectronEnv={isElectronEnv}
+          onOpenSettings={() => setSettingsOpen(true)}
+          onCheckUpdate={handleCheckUpdate}
+          updateStatus={updateStatus}
+        />
 
         {/* 인쇄 섹션 선택 다이얼로그 — 결과가 있을 때만 의미 있음 */}
         <PrintDialog
@@ -959,21 +984,21 @@ export default function HaksenbuAnalyzer() {
 
         {/* 에러 박스 */}
         {error && (
-          <div className="bg-rose-50 border border-rose-200 rounded-xl p-4 mb-6 text-rose-800">
+          <div className="bg-rose-50 dark:bg-rose-900/30 border border-rose-200 dark:border-rose-700 rounded-xl p-4 mb-6 text-rose-800 dark:text-rose-200">
             <div className="flex items-start gap-2">
               <AlertTriangle className="w-5 h-5 flex-shrink-0 mt-0.5" />
               <div className="flex-1 min-w-0">
                 <div className="text-sm leading-relaxed font-semibold">{error}</div>
                 {errorDetail && (
                   <details className="mt-2">
-                    <summary className="text-xs text-rose-600 cursor-pointer font-medium">세부 정보 보기</summary>
-                    <pre className="mt-2 text-[10px] text-slate-700 bg-white rounded p-2 border border-rose-200 overflow-auto max-h-40 whitespace-pre-wrap break-all">
+                    <summary className="text-xs text-rose-600 dark:text-rose-300 cursor-pointer font-medium">세부 정보 보기</summary>
+                    <pre className="mt-2 text-[10px] text-slate-700 dark:text-slate-300 bg-white dark:bg-slate-800 rounded p-2 border border-rose-200 dark:border-rose-700 overflow-auto max-h-40 whitespace-pre-wrap break-all">
                       {errorDetail}
                     </pre>
                   </details>
                 )}
                 <button onClick={analyze} disabled={loading}
-                  className="mt-3 inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold bg-white border border-rose-300 text-rose-700 rounded-md hover:bg-rose-100 transition">
+                  className="mt-3 inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold bg-white dark:bg-slate-800 border border-rose-300 dark:border-rose-600 text-rose-700 dark:text-rose-300 rounded-md hover:bg-rose-100 dark:hover:bg-slate-700 transition">
                   <RotateCcw className="w-3.5 h-3.5" /> 다시 시도
                 </button>
               </div>
@@ -983,7 +1008,7 @@ export default function HaksenbuAnalyzer() {
 
         {/* 부분 결과 안내 */}
         {partialNotice && partialNotice.length > 0 && (
-          <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 mb-6 text-amber-800">
+          <div className="bg-amber-50 dark:bg-amber-900/30 border border-amber-200 dark:border-amber-700 rounded-xl p-4 mb-6 text-amber-800 dark:text-amber-200">
             <div className="flex items-start gap-2">
               <AlertTriangle className="w-5 h-5 flex-shrink-0 mt-0.5" />
               <div className="flex-1 min-w-0">
@@ -992,7 +1017,7 @@ export default function HaksenbuAnalyzer() {
                   {partialNotice.map((n, i) => (<li key={i}>• {n}</li>))}
                 </ul>
                 <button onClick={analyze} disabled={loading}
-                  className="mt-3 inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold bg-white border border-amber-300 text-amber-700 rounded-md hover:bg-amber-100 transition">
+                  className="mt-3 inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold bg-white dark:bg-slate-800 border border-amber-300 dark:border-amber-600 text-amber-700 dark:text-amber-300 rounded-md hover:bg-amber-100 dark:hover:bg-slate-700 transition">
                   <RotateCcw className="w-3.5 h-3.5" /> 전체 재분석
                 </button>
               </div>

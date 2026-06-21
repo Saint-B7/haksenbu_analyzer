@@ -52,6 +52,9 @@ contextBridge.exposeInMainWorld('electronAPI', {
   // ── 자동 업데이트 설치 트리거 ────────────────────────────────────────────────
   installUpdate: () => ipcRenderer.invoke('install-update'),
 
+  // ── 업데이트 수동 확인 (결과는 onUpdateStatus 로 수신) ───────────────────────
+  checkForUpdates: () => ipcRenderer.invoke('check-for-updates'),
+
   // ── 자동 업데이트 상태 수신 (단방향: main → renderer) ──────────────────────
   // 콜백이 받는 status 객체 형태:
   //   { type: 'checking' | 'available' | 'not-available' | 'downloading' | 'downloaded' | 'error',
