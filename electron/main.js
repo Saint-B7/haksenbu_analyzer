@@ -96,6 +96,10 @@ ipcMain.handle('has-api-key', () => Boolean(store.get('apiKeyEncrypted')));
 
 ipcMain.handle('delete-api-key', () => store.delete('apiKeyEncrypted'));
 
+// ── IPC 핸들러: 앱 버전 ───────────────────────────────────────────────────────
+// 헤더 버전 표시용. package.json version 과 동일(electron-builder가 주입).
+ipcMain.handle('app:getVersion', () => app.getVersion());
+
 // ── IPC 핸들러: 앱 설정 ───────────────────────────────────────────────────────
 
 ipcMain.handle('get-setting', (_event, key) => store.get(key));

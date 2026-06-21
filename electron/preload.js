@@ -40,6 +40,10 @@ contextBridge.exposeInMainWorld('electronAPI', {
   hasApiKey:    ()    => ipcRenderer.invoke('has-api-key'),
   deleteApiKey: ()    => ipcRenderer.invoke('delete-api-key'),
 
+  // ── 앱 버전 ─────────────────────────────────────────────────────────────────
+  // 헤더 버전 표시용 — main 의 app.getVersion() 반환
+  getAppVersion: () => ipcRenderer.invoke('app:getVersion'),
+
   // ── 앱 설정 ─────────────────────────────────────────────────────────────────
   // 선택한 모델명, UI 옵션 등 평문 설정값 읽기/쓰기
   getSetting: (key)        => ipcRenderer.invoke('get-setting', key),

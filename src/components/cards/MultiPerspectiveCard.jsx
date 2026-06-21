@@ -104,7 +104,7 @@ export const MultiPerspectiveCard = ({ multi, forceOpen = false }) => {
       {isOpen && (
         <>
           {/* 3 평가자 카드 */}
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 p-5 sm:p-6 bg-slate-50/50">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 p-5 sm:p-6 bg-slate-50/50 dark:bg-slate-900/40">
             {evaluators.map((ev) => {
               const meta = EVALUATORS.find((e) => e.id === ev.id) || EVALUATORS[0];
               const Icon = meta.icon;

@@ -1,7 +1,12 @@
 // 학생 누적 분석 결과의 시간별 추이를 그리는 경량 라인 차트.
 // HistoryCard 안에서 종합점수·DNA 충족 수 등 단일 지표를 시각화한다.
 
+import { useTheme } from '../../contexts/ThemeContext';
+import { chartColors } from '../../data/dark-palette';
+
 export const TrendLineChart = ({ entries, valueKey, color = '#6366f1', label, max = 100 }) => {
+  const { theme } = useTheme();
+  const cc = chartColors(theme === 'dark'); // 그리드·축 텍스트만 다크 분기 (라인·데이터 색 유지)
   if (!entries || entries.length < 2) return null;
   const W = 320, H = 140, PAD_L = 32, PAD_R = 12, PAD_T = 12, PAD_B = 24;
   const chartW = W - PAD_L - PAD_R;
@@ -32,8 +37,8 @@ export const TrendLineChart = ({ entries, valueKey, color = '#6366f1', label, ma
           const y = PAD_T + chartH - (t / max) * chartH;
           return (
             <g key={i}>
-              <line x1={PAD_L} y1={y} x2={W - PAD_R} y2={y} stroke="#e2e8f0" strokeWidth="1" strokeDasharray={i === 0 ? '0' : '2 2'} />
-              <text x={PAD_L - 4} y={y + 3} fontSize="9" fill="#94a3b8" textAnchor="end">{t}</text>
+              <line x1={PAD_L} y1={y} x2={W - PAD_R} y2={y} stroke={cc.grid} strokeWidth="1" strokeDasharray={i === 0 ? '0' : '2 2'} />
+              <text x={PAD_L - 4} y={y + 3} fontSize="9" fill={cc.tickText} textAnchor="end">{t}</text>
             </g>
           );
         })}
@@ -44,7 +49,7 @@ export const TrendLineChart = ({ entries, valueKey, color = '#6366f1', label, ma
           <g key={i}>
             <circle cx={p.x} cy={p.y} r="4" fill={color} />
             <text x={p.x} y={p.y - 8} fontSize="10" fontWeight="bold" fill={color} textAnchor="middle">{p.value}</text>
-            <text x={p.x} y={H - 6} fontSize="9" fill="#64748b" textAnchor="middle">{p.label}</text>
+            <text x={p.x} y={H - 6} fontSize="9" fill={cc.axisText} textAnchor="middle">{p.label}</text>
           </g>
         ))}
       </svg>

@@ -3,6 +3,8 @@
 // DNARadar / TopTierRadar는 SvgRadarChart의 도메인별 래퍼.
 
 import { DNA_CRITERIA, TOP_TIER_CRITERIA } from '../../data/criteria';
+import { useTheme } from '../../contexts/ThemeContext';
+import { chartColors } from '../../data/dark-palette';
 
 /**
  * 다각형 좌표 계산: 중심 (cx, cy)에서 반지름 r만큼 떨어진 N각형 꼭짓점 N개
@@ -134,6 +136,10 @@ export const DNARadar = ({ checklist }) => {
       : (item.satisfied ? 75 : 20);
     return { subject: meta.short || item.name || `${item.id}`, value: score };
   });
+  // 그리드·가이드·라벨만 다크 분기 (값 다각형의 인디고 데이터 색은 유지)
+  const { theme } = useTheme();
+  const isDark = theme === 'dark';
+  const cc = chartColors(isDark);
   return (
     <div className="w-full saveable-remove-chart flex items-center justify-center" style={{ height: 260 }}>
       <SvgRadarChart
@@ -143,9 +149,9 @@ export const DNARadar = ({ checklist }) => {
         guideValue={50}
         fillColor="#6366f1"
         strokeColor="#6366f1"
-        guideStrokeColor="#cbd5e1"
-        gridStrokeColor="#e2e8f0"
-        labelColor="#475569"
+        guideStrokeColor={isDark ? '#64748b' : '#cbd5e1'}
+        gridStrokeColor={cc.grid}
+        labelColor={cc.axisText}
       />
     </div>
   );
@@ -159,6 +165,10 @@ export const TopTierRadar = ({ check }) => {
       : (item.met ? 75 : 18);
     return { subject: meta.short || `${item.id}`, value: score };
   });
+  // 그리드·라벨은 다크에서 중립 slate 로 (라이트는 기존 rose 톤 유지). 값 색은 유지.
+  const { theme } = useTheme();
+  const isDark = theme === 'dark';
+  const cc = chartColors(isDark);
   return (
     <div className="w-full saveable-remove-chart flex items-center justify-center" style={{ height: 280 }}>
       <SvgRadarChart
@@ -168,9 +178,9 @@ export const TopTierRadar = ({ check }) => {
         guideValue={66}
         fillColor="#fb7185"
         strokeColor="#e11d48"
-        guideStrokeColor="#fecaca"
-        gridStrokeColor="#fecaca"
-        labelColor="#475569"
+        guideStrokeColor={isDark ? '#64748b' : '#fecaca'}
+        gridStrokeColor={isDark ? cc.grid : '#fecaca'}
+        labelColor={cc.axisText}
       />
     </div>
   );

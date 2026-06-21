@@ -16,8 +16,13 @@ import { defineConfig, externalizeDepsPlugin } from 'electron-vite';
 import react from '@vitejs/plugin-react';
 import { resolve } from 'path';
 import { fileURLToPath } from 'url';
+import { readFileSync } from 'fs';
 
 const __dirname = fileURLToPath(new URL('.', import.meta.url));
+
+// package.json version 을 renderer 빌드타임 상수(__APP_VERSION__)로 주입.
+// 헤더 버전 표시가 Electron getAppVersion 실패 시 이 값을 폴백으로 쓴다.
+const pkg = JSON.parse(readFileSync(resolve(__dirname, 'package.json'), 'utf-8'));
 
 export default defineConfig({
 
@@ -59,6 +64,9 @@ export default defineConfig({
     root: resolve(__dirname, '.'),
     base: './',
     plugins: [react()],
+    define: {
+      __APP_VERSION__: JSON.stringify(pkg.version),
+    },
     build: {
       outDir: 'dist',
       rollupOptions: {

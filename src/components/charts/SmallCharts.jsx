@@ -5,8 +5,12 @@
 // - MatchBadge: high/medium/low 적합도 뱃지
 
 import { DEPTH_BUCKETS } from '../../data/criteria';
+import { useTheme } from '../../contexts/ThemeContext';
+import { chartColors } from '../../data/dark-palette';
 
 export const CircularScore = ({ score = 0, size = 160 }) => {
+  const { theme } = useTheme();
+  const cc = chartColors(theme === 'dark'); // 트랙·라벨만 다크 분기 (데이터 색은 유지)
   const stroke = 12;
   const radius = (size - stroke) / 2;
   const circumference = 2 * Math.PI * radius;
@@ -15,18 +19,20 @@ export const CircularScore = ({ score = 0, size = 160 }) => {
   const color = safe >= 80 ? '#10b981' : safe >= 60 ? '#f59e0b' : '#f43f5e';
   return (
     <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`} className="block">
-      <circle cx={size/2} cy={size/2} r={radius} fill="none" stroke="#e2e8f0" strokeWidth={stroke} />
+      <circle cx={size/2} cy={size/2} r={radius} fill="none" stroke={cc.track} strokeWidth={stroke} />
       <circle cx={size/2} cy={size/2} r={radius} fill="none" stroke={color} strokeWidth={stroke}
         strokeDasharray={circumference} strokeDashoffset={offset}
         transform={`rotate(-90 ${size/2} ${size/2})`} strokeLinecap="round"
         style={{ transition: 'stroke-dashoffset 1s ease-out' }} />
       <text x={size/2} y={size/2 - 4} textAnchor="middle" fontSize={size * 0.28} fontWeight="800" fill={color}>{safe}</text>
-      <text x={size/2} y={size/2 + size * 0.16} textAnchor="middle" fontSize={size * 0.09} fill="#64748b" fontWeight="500">/ 100점</text>
+      <text x={size/2} y={size/2 + size * 0.16} textAnchor="middle" fontSize={size * 0.09} fill={cc.axisText} fontWeight="500">/ 100점</text>
     </svg>
   );
 };
 
 export const EvidenceDonut = ({ ratio = 0, level = '심각' }) => {
+  const { theme } = useTheme();
+  const cc = chartColors(theme === 'dark');
   const size = 140, stroke = 14;
   const radius = (size - stroke) / 2;
   const circ = 2 * Math.PI * radius;
@@ -35,12 +41,12 @@ export const EvidenceDonut = ({ ratio = 0, level = '심각' }) => {
   const color = level === '통과' ? '#10b981' : level === '부족' ? '#f59e0b' : '#f43f5e';
   return (
     <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`}>
-      <circle cx={size/2} cy={size/2} r={radius} fill="none" stroke="#fee2e2" strokeWidth={stroke} />
+      <circle cx={size/2} cy={size/2} r={radius} fill="none" stroke={cc.track} strokeWidth={stroke} />
       <circle cx={size/2} cy={size/2} r={radius} fill="none" stroke={color} strokeWidth={stroke}
         strokeDasharray={circ} strokeDashoffset={offset}
         transform={`rotate(-90 ${size/2} ${size/2})`} strokeLinecap="round" />
       <text x={size/2} y={size/2 - 2} textAnchor="middle" fontSize="28" fontWeight="800" fill={color}>{safe}%</text>
-      <text x={size/2} y={size/2 + 18} textAnchor="middle" fontSize="11" fill="#64748b" fontWeight="500">구체성</text>
+      <text x={size/2} y={size/2 + 18} textAnchor="middle" fontSize="11" fill={cc.axisText} fontWeight="500">구체성</text>
     </svg>
   );
 };
@@ -70,8 +76,8 @@ export const MatchBadge = ({ level }) => {
   if (!level || level === 'unknown') return null;
   const map = {
     high:   { bg: 'bg-emerald-100 dark:bg-emerald-900/50', text: 'text-emerald-700 dark:text-emerald-300', label: '적합도 높음' },
-    medium: { bg: 'bg-amber-100',   text: 'text-amber-700 dark:text-amber-300',   label: '적합도 보통' },
-    low:    { bg: 'bg-rose-100',    text: 'text-rose-700 dark:text-rose-300',    label: '적합도 낮음' },
+    medium: { bg: 'bg-amber-100 dark:bg-amber-900/50',   text: 'text-amber-700 dark:text-amber-300',   label: '적합도 보통' },
+    low:    { bg: 'bg-rose-100 dark:bg-rose-900/50',    text: 'text-rose-700 dark:text-rose-300',    label: '적합도 낮음' },
   };
   const v = map[level] || map.medium;
   return <span className={`text-xs font-bold px-2 py-1 rounded-full ${v.bg} ${v.text}`}>{v.label}</span>;

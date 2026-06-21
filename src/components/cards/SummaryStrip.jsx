@@ -55,8 +55,8 @@ export const SummaryStrip = ({ result, activityType, grade }) => {
     : 'text-slate-500 dark:text-slate-400';
 
   return (
-    <div className="sticky top-0 z-20 bg-white/95 backdrop-blur border border-slate-200 dark:border-slate-700 rounded-xl shadow-sm mb-4">
-      <div className="flex items-center divide-x divide-slate-200 overflow-x-auto">
+    <div className="sticky top-0 z-20 bg-white/95 dark:bg-slate-800/95 backdrop-blur border border-slate-200 dark:border-slate-700 rounded-xl shadow-sm mb-4">
+      <div className="flex items-center divide-x divide-slate-200 dark:divide-slate-700 overflow-x-auto">
         {/* 학년·활동 유형 뱃지 */}
         <div className="flex items-center gap-1.5 px-3 py-2 flex-shrink-0">
           <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-indigo-100 dark:bg-indigo-900/50 text-indigo-700 dark:text-indigo-300 whitespace-nowrap">{grade}</span>

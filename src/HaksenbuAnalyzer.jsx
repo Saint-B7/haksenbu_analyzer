@@ -130,6 +130,11 @@ export default function HaksenbuAnalyzer() {
   const [updateStatus, setUpdateStatus] = useState(null);
   // OpenRouter 남은 크레딧(USD): null = 미표시(키 없음·조회 실패), number = 표시
   const [credits, setCredits] = useState(null);
+  // 헤더 버전 표시 — 빌드타임 주입(__APP_VERSION__)을 기본값으로, Electron 에선
+  // app.getVersion() 으로 덮어쓴다. typeof 가드로 define 미주입 환경에서도 안전.
+  const [appVersion, setAppVersion] = useState(
+    typeof __APP_VERSION__ !== 'undefined' ? __APP_VERSION__ : ''
+  );
 
   // 남은 크레딧 갱신 — 저장된 키 기반. 실패 시 조용히 null(뱃지 숨김), 폴링 없음.
   const refreshCredits = () => {
@@ -155,6 +160,10 @@ export default function HaksenbuAnalyzer() {
       .then(setApiKeyReady)
       .catch(() => setApiKeyReady(null));
     refreshCredits();
+    // Electron 실제 앱 버전으로 헤더 갱신 (실패 시 빌드타임 폴백 유지)
+    window.electronAPI.getAppVersion?.()
+      .then((v) => { if (v) setAppVersion(v); })
+      .catch(() => {});
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   // 자동 업데이트 IPC 구독 (패키징된 앱에서만 updater가 동작)
@@ -661,7 +670,7 @@ export default function HaksenbuAnalyzer() {
           <div className="flex items-center gap-2 mb-1 flex-wrap">
             <Sparkles className="w-7 h-7 text-indigo-600" />
             <h1 className="text-2xl sm:text-3xl font-bold text-slate-900 dark:text-slate-100">학생부 문장 분석기</h1>
-            <span className="ml-1 text-xs px-2 py-0.5 rounded-full bg-indigo-100 dark:bg-indigo-900 text-indigo-700 dark:text-indigo-300 font-bold">v1</span>
+            <span className="ml-1 text-xs px-2 py-0.5 rounded-full bg-indigo-100 dark:bg-indigo-900 text-indigo-700 dark:text-indigo-300 font-bold">v{appVersion}</span>
             {/* 다크모드 토글 버튼 */}
             <button
               onClick={toggleTheme}
@@ -1050,7 +1059,6 @@ export default function HaksenbuAnalyzer() {
               </div>
 
             </div>
-            <p className="text-center text-xs text-slate-400 dark:text-slate-500 font-medium">개발자 : 배성인</p>
           </div>
         )}
 
@@ -1087,7 +1095,7 @@ export default function HaksenbuAnalyzer() {
             </div>
 
             {/* 3 탭 네비게이션 */}
-            <div className="print-hide bg-white border border-slate-200 rounded-xl p-1.5 flex gap-1.5 shadow-sm overflow-x-auto">
+            <div className="print-hide bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl p-1.5 flex gap-1.5 shadow-sm overflow-x-auto">
               {[
                 { key: 'core', label: '핵심 분석', icon: BarChart3,
                   desc: '점수 · 구조도 · DNA · 깊이 · 학과 · 강약점 · 대안 문장' },
@@ -1110,8 +1118,8 @@ export default function HaksenbuAnalyzer() {
                       isActive
                         ? 'bg-indigo-600 text-white shadow-sm'
                         : tab.disabled
-                          ? 'bg-slate-50 text-slate-300 cursor-not-allowed'
-                          : 'bg-white text-slate-700 hover:bg-slate-50'
+                          ? 'bg-slate-50 dark:bg-slate-900 text-slate-300 dark:text-slate-600 cursor-not-allowed'
+                          : 'bg-white dark:bg-slate-700 text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-600'
                     }`}
                     title={tab.desc}
                   >
@@ -1128,29 +1136,29 @@ export default function HaksenbuAnalyzer() {
 
                 {/* 1) 종합 점수 — 항상 펼침 */}
                 {result.overallScore !== undefined && (
-                  <div className="bg-white rounded-xl border border-slate-200 p-5 sm:p-6 shadow-sm">
+                  <div className="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 p-5 sm:p-6 shadow-sm">
                     <CardHeader icon={BarChart3} title="종합 점수"
                       tooltip="100점 만점 종합 평가. 7가지 DNA(50점 이상 충족 항목 수), 6단계 서사 흐름의 완결성, 근거의 검증 가능성, 탐구 깊이 1~10 점수를 가중 평균해 산출됩니다. 80점 이상은 우수, 60~79점은 보완 필요, 60점 미만은 재작성 권장 수준입니다. 우측 DNA·도약 충족 수와 함께 보면 약점이 어디인지 빠르게 파악할 수 있습니다." />
                     <div className="flex flex-col sm:flex-row items-center sm:items-stretch gap-5">
                       <div className="flex-shrink-0"><CircularScore score={result.overallScore} /></div>
                       <div className="flex-1 flex flex-col justify-center min-w-0">
-                        <div className="text-xs text-slate-500 mb-1 font-medium">{grade} · {activityType}활동</div>
+                        <div className="text-xs text-slate-500 dark:text-slate-400 mb-1 font-medium">{grade} · {activityType}활동</div>
                         <div className="flex flex-wrap gap-2 mb-3">
                           {result.satisfiedCount !== undefined && (
                             <span className={`text-sm font-bold px-3 py-1.5 rounded-lg border ${
-                              result.satisfiedCount >= 5 ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
-                              : result.satisfiedCount >= 3 ? 'bg-amber-50 text-amber-700 border-amber-200'
-                              : 'bg-rose-50 text-rose-700 border-rose-200'
+                              result.satisfiedCount >= 5 ? 'bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-900/30 dark:text-emerald-300 dark:border-emerald-700'
+                              : result.satisfiedCount >= 3 ? 'bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-900/30 dark:text-amber-300 dark:border-amber-700'
+                              : 'bg-rose-50 text-rose-700 border-rose-200 dark:bg-rose-900/30 dark:text-rose-300 dark:border-rose-700'
                             }`}>DNA {result.satisfiedCount} / 7 충족</span>
                           )}
                           {result.topTierMetCount !== undefined && (
-                            <span className="text-sm font-bold px-3 py-1.5 rounded-lg border bg-rose-50 text-rose-700 border-rose-200">
+                            <span className="text-sm font-bold px-3 py-1.5 rounded-lg border bg-rose-50 text-rose-700 border-rose-200 dark:bg-rose-900/30 dark:text-rose-300 dark:border-rose-700">
                               🔥 도약 {result.topTierMetCount} / 10
                             </span>
                           )}
                         </div>
                         {result.scoreReason && (
-                          <p className="text-sm text-slate-700 leading-relaxed"><RichText text={result.scoreReason} /></p>
+                          <p className="text-sm text-slate-700 dark:text-slate-300 leading-relaxed"><RichText text={result.scoreReason} /></p>
                         )}
                       </div>
                     </div>
@@ -1166,19 +1174,19 @@ export default function HaksenbuAnalyzer() {
                     defaultOpen={false}
                     forceOpen={printMode}
                     headerExtra={
-                      <span className="text-xs font-bold px-2 py-0.5 rounded-full bg-indigo-50 text-indigo-700 border border-indigo-200 whitespace-nowrap">
+                      <span className="text-xs font-bold px-2 py-0.5 rounded-full bg-indigo-50 text-indigo-700 border border-indigo-200 dark:bg-indigo-900/40 dark:text-indigo-300 dark:border-indigo-700 whitespace-nowrap">
                         {depth.score} / 10
                       </span>
                     }
                   >
                     <DepthGauge score={depth.score} bucketLabel={depth.bucketLabel || depthBucket.label} />
-                    <p className="mt-4 text-sm text-slate-700 leading-relaxed"><RichText text={depth.rationale} /></p>
+                    <p className="mt-4 text-sm text-slate-700 dark:text-slate-300 leading-relaxed"><RichText text={depth.rationale} /></p>
                     {depth.depthEvidence?.length > 0 && (
                       <div className="mt-3">
-                        <div className="text-xs font-bold text-slate-500 mb-2 uppercase tracking-wide">판정 근거</div>
+                        <div className="text-xs font-bold text-slate-500 dark:text-slate-400 mb-2 uppercase tracking-wide">판정 근거</div>
                         <ul className="space-y-1.5">
                           {depth.depthEvidence.map((e, i) => (
-                            <li key={i} className="text-xs text-slate-700 leading-relaxed pl-3 border-l-2 border-indigo-300">
+                            <li key={i} className="text-xs text-slate-700 dark:text-slate-300 leading-relaxed pl-3 border-l-2 border-indigo-300 dark:border-indigo-600">
                               <RichText text={e} />
                             </li>
                           ))}
@@ -1201,9 +1209,9 @@ export default function HaksenbuAnalyzer() {
                     forceOpen={printMode}
                     headerExtra={
                       <span className={`text-xs font-bold px-2 py-0.5 rounded-full whitespace-nowrap border ${
-                        (result.satisfiedCount ?? 0) >= 5 ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
-                        : (result.satisfiedCount ?? 0) >= 3 ? 'bg-amber-50 text-amber-700 border-amber-200'
-                        : 'bg-rose-50 text-rose-700 border-rose-200'
+                        (result.satisfiedCount ?? 0) >= 5 ? 'bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-900/30 dark:text-emerald-300 dark:border-emerald-700'
+                        : (result.satisfiedCount ?? 0) >= 3 ? 'bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-900/30 dark:text-amber-300 dark:border-amber-700'
+                        : 'bg-rose-50 text-rose-700 border-rose-200 dark:bg-rose-900/30 dark:text-rose-300 dark:border-rose-700'
                       }`}>
                         {result.satisfiedCount ?? 0} / 7
                       </span>
@@ -1225,22 +1233,22 @@ export default function HaksenbuAnalyzer() {
                                 : <XCircle className="w-5 h-5 text-rose-400 flex-shrink-0 mt-0.5" />}
                               <div className="flex-1 min-w-0">
                                 <div className="flex items-baseline gap-1.5 flex-wrap">
-                                  <span className="text-slate-400 text-sm font-bold">{meta.mark}</span>
-                                  <span className="font-bold text-slate-900 text-base">{item.name}</span>
+                                  <span className="text-slate-400 dark:text-slate-500 text-sm font-bold">{meta.mark}</span>
+                                  <span className="font-bold text-slate-900 dark:text-slate-100 text-base">{item.name}</span>
                                   <span className={`ml-auto text-xs px-2 py-0.5 rounded font-bold border ${lvl.bg} ${lvl.text} ${lvl.border}`}>
                                     {lvl.label} · {qScore}
                                   </span>
                                 </div>
-                                <div className="h-1.5 bg-slate-100 rounded-full mt-2 mb-2 overflow-hidden">
+                                <div className="h-1.5 bg-slate-100 dark:bg-slate-700 rounded-full mt-2 mb-2 overflow-hidden">
                                   <div className="h-full transition-all duration-500" style={{ width: `${qScore}%`, backgroundColor: lvl.radarStroke }} />
                                 </div>
-                                <p className="text-sm text-slate-700 leading-relaxed">
+                                <p className="text-sm text-slate-700 dark:text-slate-300 leading-relaxed">
                                   <RichText text={item.evidence} />
                                 </p>
                                 {/* DNA 요소별 대안 문장 */}
                                 {item.dnaRewrite && (
-                                  <p className="text-sm text-indigo-800 leading-relaxed mt-2 p-2 bg-indigo-50/70 border-l-3 border-indigo-400 rounded-r">
-                                    <span className="font-bold text-indigo-600">대안 문장 · </span>
+                                  <p className="text-sm text-indigo-800 dark:text-indigo-200 leading-relaxed mt-2 p-2 bg-indigo-50/70 dark:bg-indigo-900/30 border-l-3 border-indigo-400 dark:border-indigo-500 rounded-r">
+                                    <span className="font-bold text-indigo-600 dark:text-indigo-300">대안 문장 · </span>
                                     <RichText text={item.dnaRewrite} />
                                   </p>
                                 )}
@@ -1262,13 +1270,13 @@ export default function HaksenbuAnalyzer() {
                     defaultOpen={false}
                     forceOpen={printMode}
                     headerExtra={
-                      <span className="text-xs font-bold px-2 py-0.5 rounded-full bg-indigo-50 text-indigo-700 border border-indigo-200 whitespace-nowrap">
+                      <span className="text-xs font-bold px-2 py-0.5 rounded-full bg-indigo-50 text-indigo-700 border border-indigo-200 dark:bg-indigo-900/40 dark:text-indigo-300 dark:border-indigo-700 whitespace-nowrap">
                         {result.majorAlignment.primary}
                       </span>
                     }
                   >
                     <div className="mb-4">
-                      <div className="text-xs font-bold text-slate-500 mb-2 uppercase tracking-wide">주연계 학과</div>
+                      <div className="text-xs font-bold text-slate-500 dark:text-slate-400 mb-2 uppercase tracking-wide">주연계 학과</div>
                       <div className="flex items-center gap-2 flex-wrap">
                         <div className="inline-block px-4 py-2 bg-indigo-600 text-white text-base font-bold rounded-lg shadow-sm">
                           {result.majorAlignment.primary}
@@ -1276,30 +1284,30 @@ export default function HaksenbuAnalyzer() {
                         {(desiredMajor || careerGoal) && <MatchBadge level={result.majorAlignment.matchWithDesired} />}
                       </div>
                       {result.majorAlignment.primaryReason && (
-                        <p className="text-sm text-slate-700 mt-2 leading-relaxed">
+                        <p className="text-sm text-slate-700 dark:text-slate-300 mt-2 leading-relaxed">
                           <RichText text={result.majorAlignment.primaryReason} />
                         </p>
                       )}
                       {result.majorAlignment.matchComment && (desiredMajor || careerGoal) && (
-                        <p className="text-sm text-purple-700 mt-1 leading-relaxed font-medium">
+                        <p className="text-sm text-purple-700 dark:text-purple-300 mt-1 leading-relaxed font-medium">
                           비교 · {result.majorAlignment.matchComment}
                         </p>
                       )}
                     </div>
                     {result.majorAlignment.related?.length > 0 && (
                       <div className="mb-3">
-                        <div className="text-xs font-bold text-slate-500 mb-2 uppercase tracking-wide">관련 학과</div>
+                        <div className="text-xs font-bold text-slate-500 dark:text-slate-400 mb-2 uppercase tracking-wide">관련 학과</div>
                         <div className="flex flex-wrap gap-1.5">
                           {result.majorAlignment.related.map((r, i) => (
-                            <span key={i} className="px-2.5 py-1 bg-indigo-50 text-indigo-700 text-sm font-semibold rounded-md border border-indigo-200">{r}</span>
+                            <span key={i} className="px-2.5 py-1 bg-indigo-50 text-indigo-700 text-sm font-semibold rounded-md border border-indigo-200 dark:bg-indigo-900/40 dark:text-indigo-300 dark:border-indigo-700">{r}</span>
                           ))}
                         </div>
                       </div>
                     )}
                     {result.majorAlignment.crossDisciplinary && (
                       <div>
-                        <div className="text-xs font-bold text-slate-500 mb-1 uppercase tracking-wide">융합 성격</div>
-                        <p className="text-sm text-slate-700 leading-relaxed">{result.majorAlignment.crossDisciplinary}</p>
+                        <div className="text-xs font-bold text-slate-500 dark:text-slate-400 mb-1 uppercase tracking-wide">융합 성격</div>
+                        <p className="text-sm text-slate-700 dark:text-slate-300 leading-relaxed">{result.majorAlignment.crossDisciplinary}</p>
                       </div>
                     )}
                   </CollapsibleCard>
@@ -1315,7 +1323,7 @@ export default function HaksenbuAnalyzer() {
                     forceOpen={printMode}
                     headerExtra={
                       result.curriculumConnection?.length > 0 ? (
-                        <span className="text-xs font-bold px-2 py-0.5 rounded-full bg-slate-50 text-slate-600 border border-slate-200 whitespace-nowrap">
+                        <span className="text-xs font-bold px-2 py-0.5 rounded-full bg-slate-50 text-slate-600 border border-slate-200 dark:bg-slate-700/50 dark:text-slate-300 dark:border-slate-600 whitespace-nowrap">
                           {result.curriculumConnection.length}건
                         </span>
                       ) : null
@@ -1326,19 +1334,19 @@ export default function HaksenbuAnalyzer() {
                         {result.curriculumConnection.map((c, i) => {
                           const sp = SPECIFICITY_COLORS[c.specificity] || SPECIFICITY_COLORS.low;
                           return (
-                            <div key={i} className="border border-slate-200 rounded-lg p-3.5 hover:border-indigo-300 transition">
+                            <div key={i} className="border border-slate-200 dark:border-slate-700 rounded-lg p-3.5 hover:border-indigo-300 dark:hover:border-indigo-600 transition">
                               <div className="flex items-center gap-2 mb-1 flex-wrap">
-                                <span className="text-base font-bold text-slate-900">{c.subject}</span>
-                                {c.unit && (<><span className="text-slate-400">›</span><span className="text-base font-semibold text-slate-700">{c.unit}</span></>)}
+                                <span className="text-base font-bold text-slate-900 dark:text-slate-100">{c.subject}</span>
+                                {c.unit && (<><span className="text-slate-400 dark:text-slate-500">›</span><span className="text-base font-semibold text-slate-700 dark:text-slate-300">{c.unit}</span></>)}
                                 <span className={`ml-auto text-xs px-2 py-0.5 rounded border font-bold ${sp.border} ${sp.bg} ${sp.text}`}>{sp.label}</span>
                               </div>
-                              {c.excerpt && (<p className="text-sm text-slate-600 italic leading-relaxed mt-1">"{c.excerpt}"</p>)}
+                              {c.excerpt && (<p className="text-sm text-slate-600 dark:text-slate-400 italic leading-relaxed mt-1">"{c.excerpt}"</p>)}
                             </div>
                           );
                         })}
                       </div>
                     ) : (
-                      <p className="text-sm text-slate-400 italic">본문에서 교과·단원이 직접 추출되지 않았습니다.</p>
+                      <p className="text-sm text-slate-400 dark:text-slate-500 italic">본문에서 교과·단원이 직접 추출되지 않았습니다.</p>
                     )}
                   </CollapsibleCard>
                 )}
@@ -1452,7 +1460,7 @@ export default function HaksenbuAnalyzer() {
 
         <div className="print-hide mt-8 text-xs text-slate-400 text-center leading-relaxed">
           기록의 가치를 높이는 학생부 문장 진단 솔루션
-          <div className="mt-1 text-[11px] text-slate-300">개발자 : 배성인</div>
+          <div className="mt-1 text-[11px] text-slate-300">원화여고 배성인</div>
         </div>
       </div>
     </div>
