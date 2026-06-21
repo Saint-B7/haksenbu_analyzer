@@ -50,6 +50,9 @@ const TEST_MODELS = [
 const DEFAULT_ANALYSIS_MODEL = 'anthropic/claude-sonnet-4-5';
 const DEFAULT_TEST_MODEL     = 'google/gemini-2.0-flash-001';
 
+// 분석 모델 select 의 "직접 입력" 옵션 값 (프리셋에 없는 모델 ID를 코드 수정 없이 사용)
+const CUSTOM_MODEL = '__custom__';
+
 // ── 헬퍼 ──────────────────────────────────────────────────────────────────────
 
 // openrouter.ai 링크를 시스템 기본 브라우저로 열기
@@ -433,6 +436,9 @@ function Step4Test({ apiKeyDraft, testModel, setTestModel, testing, testResult, 
 
 function ConnectedView({ model, onModelChange, onReset, onDeleteKey }) {
   const [confirmReset, setConfirmReset] = useState(false);
+  // 저장된 모델이 프리셋에 없으면 "직접 입력" 모드로 시작
+  const isPreset = ANALYSIS_MODELS.some((m) => m.id === model);
+  const [customMode, setCustomMode] = useState(!isPreset && !!model);
 
   return (
     <div className="space-y-5">
@@ -451,15 +457,33 @@ function ConnectedView({ model, onModelChange, onReset, onDeleteKey }) {
       <div className="space-y-2">
         <label className="block text-sm font-bold text-slate-700 dark:text-slate-300">분석 모델</label>
         <select
-          value={model}
-          onChange={e => onModelChange(e.target.value)}
-          className="w-full border border-slate-300 dark:border-slate-600 rounded-xl px-3 py-2.5 text-sm bg-white dark:bg-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-200"
+          value={customMode ? CUSTOM_MODEL : model}
+          onChange={e => {
+            const v = e.target.value;
+            if (v === CUSTOM_MODEL) { setCustomMode(true); }      // 입력 칸 노출, 모델은 사용자가 입력
+            else { setCustomMode(false); onModelChange(v); }
+          }}
+          className="w-full border border-slate-300 dark:border-slate-600 rounded-xl px-3 py-2.5 text-sm bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-indigo-200"
         >
           {ANALYSIS_MODELS.map(m => (
             <option key={m.id} value={m.id}>{m.label}</option>
           ))}
+          <option value={CUSTOM_MODEL}>직접 입력 (모델 ID)…</option>
         </select>
-        <p className="text-xs text-slate-400">모델 선택은 즉시 저장됩니다.</p>
+        {customMode && (
+          <input
+            type="text"
+            value={model}
+            onChange={e => onModelChange(e.target.value.trim())}
+            placeholder="예: anthropic/claude-sonnet-4.7"
+            className="w-full border border-slate-300 dark:border-slate-600 rounded-xl px-3 py-2.5 text-sm font-mono bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-indigo-200"
+          />
+        )}
+        <p className="text-xs text-slate-400">
+          {customMode
+            ? 'OpenRouter 모델 ID를 provider/model 형식으로 입력하세요. 신규 모델도 코드 수정 없이 사용 가능합니다.'
+            : '모델 선택은 즉시 저장됩니다.'}
+        </p>
       </div>
 
       {/* 사용량 확인 링크 */}

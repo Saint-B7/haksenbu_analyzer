@@ -36,25 +36,50 @@ export default function PrintReportView({
   const has = (id) => selectedSections.has(id);
   const today = new Date().toLocaleDateString('ko-KR', { year: 'numeric', month: 'long', day: 'numeric' });
 
-  // 콘텐츠 높이를 측정해 페이지 경계 개수를 계산한다(화면 전용 가이드).
+  // 콘텐츠를 측정해 페이지 경계의 실제 Y 위치(px)를 계산한다(화면 전용 가이드).
+  // 고정 간격으로 자르면 항목 중간을 가로지를 수 있으므로, 잘리면 안 되는 블록
+  // (.print-item / .print-section / .print-cover)의 경계로 스냅해 실제 인쇄의
+  // break-inside:avoid 동작과 일치시킨다.
   const contentRef = useRef(null);
-  const [pageCount, setPageCount] = useState(1);
+  const [dividerTops, setDividerTops] = useState([]);
 
   useLayoutEffect(() => {
     const el = contentRef.current;
     if (!el) return;
     const measure = () => {
-      const h = el.scrollHeight;
-      setPageCount(Math.max(1, Math.ceil(h / PAGE_CONTENT_PX)));
+      const total = el.scrollHeight;
+      if (total <= PAGE_CONTENT_PX) { setDividerTops([]); return; }
+
+      // 잘리면 안 되는 원자 블록들의 top 위치(콘텐츠 기준, 오름차순)
+      const baseTop = el.getBoundingClientRect().top;
+      const candidates = Array.from(el.querySelectorAll('.print-item, .print-section, .print-cover'))
+        .map((n) => n.getBoundingClientRect().top - baseTop)
+        .filter((y) => y > 0)
+        .sort((a, b) => a - b);
+
+      const tops = [];
+      let pageStart = 0;
+      let guard = 0;
+      while (pageStart + PAGE_CONTENT_PX < total && guard++ < 300) {
+        const ideal = pageStart + PAGE_CONTENT_PX;
+        // ideal 이하의 마지막 블록 경계로 스냅(블록을 가로지르지 않도록).
+        // 페이지보다 큰 블록이라 후보가 없으면 고정 위치로 진행(무한루프 방지).
+        let snap = null;
+        for (const y of candidates) {
+          if (y > pageStart + 1 && y <= ideal) snap = y;
+          else if (y > ideal) break;
+        }
+        const next = snap ?? ideal;
+        tops.push(next);
+        pageStart = next;
+      }
+      setDividerTops(tops);
     };
     measure();
     const ro = new ResizeObserver(measure);
     ro.observe(el);
     return () => ro.disconnect();
   }, [selectedSections, result]);
-
-  // 경계는 1페이지~(pageCount-1)페이지 끝마다. k번째 경계 = 다음 페이지(k+1) 시작.
-  const dividers = Array.from({ length: pageCount - 1 }, (_, k) => k + 1);
 
   return (
     <>
@@ -115,14 +140,15 @@ export default function PrintReportView({
               학생부 문장 분석기 · 분석일 {today}
             </div>
 
-            {/* 페이지 경계 점선 + "── N페이지 ──" 라벨 — .no-print 로 인쇄 시 숨김 */}
-            {dividers.map((k) => (
+            {/* 페이지 경계 점선 + "── N페이지 ──" 라벨 — .no-print 로 인쇄 시 숨김.
+                위치는 항목 경계로 스냅된 실제 Y값(dividerTops). i번째 경계 = (i+2)페이지 시작. */}
+            {dividerTops.map((top, i) => (
               <div
-                key={k}
+                key={i}
                 className="print-page-divider no-print"
-                style={{ top: `${k * PAGE_CONTENT_PX}px` }}
+                style={{ top: `${top}px` }}
               >
-                <span className="print-page-label">── {k + 1}페이지 ──</span>
+                <span className="print-page-label">── {i + 2}페이지 ──</span>
               </div>
             ))}
 

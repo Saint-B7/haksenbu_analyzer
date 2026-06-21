@@ -16,6 +16,7 @@ export const humanizeError = (msg) => {
   if (/Invalid response format/i.test(msg)) return '응답 형식 오류 — 잠시 후 다시 시도해 주세요.';
   if (/Failed to fetch|NetworkError/i.test(msg)) return '네트워크 오류 — 연결 상태를 확인하고 다시 시도해 주세요.';
   if (/402|insufficient|크레딧|credit/i.test(msg)) return '크레딧 부족 — OpenRouter에서 크레딧을 충전한 뒤 다시 시도해 주세요.';
+  if (/401|403|invalid.*key|키.*복호화|키가 설정/i.test(msg)) return 'API 키 문제 — 설정(⚙️)에서 키를 다시 연결해 주세요.';
   if (/429|rate.?limit/i.test(msg)) return '요청 한도 초과 — 30초~1분 후 다시 시도해 주세요.';
   if (/529|overload/i.test(msg)) return '서버 과부하 — 잠시 후 다시 시도해 주세요.';
   if (/API 키가 설정되지/i.test(msg)) return msg;
