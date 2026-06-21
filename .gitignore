@@ -13,6 +13,9 @@ release/
 # 아이콘 생성 임시 디렉터리 (npm run icons:gen 중간 산출물)
 build/icon.iconset/
 
+# 레포 루트에 드롭된 아이콘 원본 파일 (정식 아이콘은 build/icon.* 사용)
+/TalkFile_*.ico
+
 # 환경 변수 (API 키 등 절대 커밋 금지)
 .env
 .env.local

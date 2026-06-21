@@ -496,6 +496,7 @@ export default function HaksenbuAnalyzer() {
 
     setLoading(false);
     setLoadingPhase('');
+    refreshCredits(); // 분석으로 차감된 잔액을 즉시 반영
   };
 
   // ── 3관점 평가 추가 분석 ────────────────────────────────────
@@ -530,6 +531,7 @@ export default function HaksenbuAnalyzer() {
       console.error('[MP phase failed]', e);
     } finally {
       setMpLoading(false);
+      refreshCredits(); // 3관점 평가로 차감된 잔액도 즉시 반영
     }
   };
 
