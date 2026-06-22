@@ -41,7 +41,7 @@ import {
   GRADES, ACTIVITY_TYPES, DNA_CRITERIA, depthBucketOf,
 } from './data/criteria';
 import { qualityLevelOf, SPECIFICITY_COLORS } from './data/colors';
-import { TOAST_COPIED_MS } from './data/constants';
+import { TOAST_COPIED_MS, REWRITE_LENGTH_OPTIONS } from './data/constants';
 
 // 공통 컴포넌트
 import { RichText, InfoTooltip, CardHeader, CollapsibleCard } from './components/common';
@@ -90,6 +90,8 @@ export default function HaksenbuAnalyzer() {
   const [careerGoal, setCareerGoal] = useState(() => loadDraft().careerGoal);
   const [desiredMajor, setDesiredMajor] = useState(() => loadDraft().desiredMajor);
   const [text, setText] = useState(() => loadDraft().text);
+  // 대안 문장 목표 글자수 — 기본 'best'(최선의 문장). 바꾸지 않으면 기존 동작과 동일.
+  const [rewriteLength, setRewriteLength] = useState('best');
 
   // ── 분석 상태 ─────────────────────────────────────────────
   const [loading, setLoading] = useState(false);
@@ -459,7 +461,7 @@ export default function HaksenbuAnalyzer() {
     // 2 phase 병렬 호출 — 한쪽 실패해도 다른 쪽 결과는 보존
     const [coreSettled, extSettled] = await Promise.allSettled([
       callPhase({
-        system: buildCorePrompt(activityType, grade, careerGoal, desiredMajor),
+        system: buildCorePrompt(activityType, grade, careerGoal, desiredMajor, rewriteLength),
         userMsg,
         maxTokens: 12000,
       }),
@@ -494,6 +496,8 @@ export default function HaksenbuAnalyzer() {
     if (merged.rewrittenVersion) {
       merged.rewrittenVersion = stripBoldMarkup(merged.rewrittenVersion).trim();
     }
+    // 이 분석에 사용된 대안 문장 목표 글자수를 결과에 기록 → RewriteCard 표시 기준
+    merged.rewriteLengthUsed = rewriteLength;
 
     setResult(merged);
 
@@ -932,10 +936,37 @@ export default function HaksenbuAnalyzer() {
             </div>
           </div>
 
+          {/* 4. 대안 문장 글자수 — 분석 결과의 대안 문장 목표 분량 선택(기본: 최선의 문장) */}
+          <div>
+            <label className="flex items-center gap-1.5 text-sm font-bold text-slate-700 dark:text-slate-300 mb-2">
+              4. 대안 문장 글자수
+              <InfoTooltip content="분석 결과에 제시될 대안 문장의 목표 분량입니다. 글자수를 고르면 선택값 ±50자(한글 글자수) 범위로 작성되고, '최선의 문장'은 글자수 제한 없이 최선의 분량으로 작성됩니다." />
+            </label>
+            <select
+              value={rewriteLength}
+              onChange={(e) => setRewriteLength(e.target.value)}
+              className="w-full md:w-auto border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-900 dark:text-slate-100 rounded-lg text-sm px-3 py-2.5 focus:outline-none focus:border-indigo-400 focus:ring-1 focus:ring-indigo-400"
+            >
+              {REWRITE_LENGTH_OPTIONS.map((o) => (
+                <option key={o.value} value={o.value}>{o.label}</option>
+              ))}
+            </select>
+            <p className="text-xs text-slate-500 dark:text-slate-400 mt-1.5 flex items-center gap-1">
+              <Info className="w-3.5 h-3.5 flex-shrink-0" />
+              <span>분석 결과에 제시될 대안 문장의 목표 분량입니다. ±50자 범위로 작성됩니다.</span>
+            </p>
+            {rewriteLength === '500' && (
+              <p className="text-xs text-amber-600 dark:text-amber-400 mt-1 flex items-center gap-1">
+                <AlertTriangle className="w-3.5 h-3.5 flex-shrink-0" />
+                <span>NEIS 한도(약 500자)에 가까우니 입력 시 분량을 확인하세요.</span>
+              </p>
+            )}
+          </div>
+
           <div>
             <div className="flex items-center justify-between mb-2 flex-wrap gap-2">
               <label className="flex items-center gap-1.5 text-sm font-bold text-slate-700 dark:text-slate-300">
-                4. 분석할 학생부 문구
+                5. 분석할 학생부 문구
                 {charCount >= 10 && <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500" />}
                 <InfoTooltip content="NEIS 시스템은 한글 1자를 3바이트, 영문·숫자·공백을 1바이트로 계산합니다. 한도 1500바이트 ≈ 한글 500자입니다." />
               </label>
@@ -1428,6 +1459,7 @@ export default function HaksenbuAnalyzer() {
                 {/* 10) 대안 문장 — 항상 펼침 */}
                 <RewriteCard
                   rewrittenVersion={result.rewrittenVersion}
+                  rewriteLength={result.rewriteLengthUsed || 'best'}
                   copied={copied}
                   onCopy={copyRewrite}
                 />

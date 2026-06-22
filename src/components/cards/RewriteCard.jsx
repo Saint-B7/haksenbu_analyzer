@@ -22,12 +22,16 @@ import { stripBoldMarkup } from '../../lib/text-format';
 import {
   REWRITE_GAUGE_HEADROOM_BASE,
   REWRITE_GAUGE_HEADROOM_OVER,
+  REWRITE_LENGTH_RANGES,
 } from '../../data/constants';
 import { InfoTooltip } from '../common';
 
 // 권장 범위(1470~1500B) 안에 있는지 단일 진실(single source of truth)로 계산.
 const isInRecommendedRange = (bytes) =>
   bytes >= NEIS_BYTE_REWRITE_MIN && bytes <= NEIS_BYTE_LIMIT;
+
+// 한글 글자수(코드포인트 기준) — 교사 친화적 "자" 단위.
+const countChars = (s) => [...(s || '')].length;
 
 /**
  * 대안 문장 헤더 우측의 바이트 수 + 권장 범위 뱃지.
@@ -92,6 +96,49 @@ const RewriteByteGauge = ({ rewrittenVersion }) => {
 };
 
 /**
+ * 글자수 목표(300/400/500) 모드의 헤더 우측 배지 — 현재 글자수 + 목표 범위 충족 여부.
+ * 범위 [min,max] 안이면 초록 ✓, 벗어나면 회색.
+ */
+const RewriteCharBadge = ({ rewrittenVersion, min, max }) => {
+  const chars = countChars(rewrittenVersion);
+  const inRange = chars >= min && chars <= max;
+  const tone = inRange ? 'text-emerald-700 dark:text-emerald-300' : 'text-slate-600 dark:text-slate-400';
+  const badgeBg = inRange
+    ? 'bg-emerald-100 dark:bg-emerald-900/50 text-emerald-700 dark:text-emerald-300 border-emerald-300'
+    : 'bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-400 border-slate-300 dark:border-slate-600';
+  return (
+    <div className="ml-auto flex items-center gap-2 flex-wrap">
+      <span className={`text-[10px] px-2 py-0.5 rounded font-bold border ${badgeBg}`}>{inRange ? '목표 범위 ✓' : '목표 범위 외'}</span>
+      <span className={`text-sm font-mono font-bold ${tone}`}>{chars}자</span>
+    </div>
+  );
+};
+
+/**
+ * 글자수 목표 모드의 게이지 — 목표 범위 [min,max]를 연녹색으로 강조, 현재 글자수를 진행 바로.
+ */
+const RewriteCharGauge = ({ rewrittenVersion, min, max }) => {
+  const chars = countChars(rewrittenVersion);
+  const scaleMax = Math.max(max * REWRITE_GAUGE_HEADROOM_BASE, chars * REWRITE_GAUGE_HEADROOM_OVER);
+  const pct = Math.min(100, (chars / scaleMax) * 100);
+  const startPct = (min / scaleMax) * 100;
+  const endPct = (max / scaleMax) * 100;
+  const inRange = chars >= min && chars <= max;
+  const fillColor = inRange ? 'bg-emerald-500' : 'bg-slate-400';
+  return (
+    <div className="mb-4">
+      <div className="relative h-2.5 bg-slate-100 dark:bg-slate-700 rounded-full overflow-hidden">
+        <div className="absolute inset-y-0 bg-emerald-200/70" style={{ left: `${startPct}%`, width: `${endPct - startPct}%` }} />
+        <div className={`h-full transition-all duration-500 ${fillColor}`} style={{ width: `${pct}%` }} />
+      </div>
+      <div className="text-[11px] text-emerald-700 dark:text-emerald-300 font-bold text-center mt-1.5">
+        목표 {min}~{max}자
+      </div>
+    </div>
+  );
+};
+
+/**
  * 대안 문장 카드 본체. 종합 점수 카드와 함께 펼친 상태로 표시되는 핵심 결과 영역.
  * 별표 마크업(**X**, *)은 stripBoldMarkup으로 화면 표시 전·복사 시 모두 제거.
  *
@@ -100,19 +147,28 @@ const RewriteByteGauge = ({ rewrittenVersion }) => {
  * @param {boolean}  props.copied           - 부모가 관리하는 "복사됨" 토스트 상태
  * @param {Function} props.onCopy           - 클립보드 복사 핸들러
  */
-export const RewriteCard = ({ rewrittenVersion, copied, onCopy }) => {
+export const RewriteCard = ({ rewrittenVersion, rewriteLength = 'best', copied, onCopy }) => {
   if (!rewrittenVersion) return null;
+
+  // 글자수 목표(300/400/500)가 선택됐으면 글자수 기준, 아니면(best) 기존 바이트 기준으로 표시.
+  const charRange = REWRITE_LENGTH_RANGES[rewriteLength];
 
   return (
     <div className="bg-white dark:bg-slate-800 border-2 border-indigo-300 rounded-xl p-5 sm:p-6 shadow-sm">
       <div className="flex items-center gap-2 mb-3 flex-wrap">
         <BookOpen className="w-5 h-5 text-indigo-600" />
         <h3 className="font-bold text-slate-900 dark:text-slate-100 text-base">대안 문장</h3>
-        <InfoTooltip content="모든 분석 결과와 최상위 도약 10기준을 반영해 본문 탐구활동이 자연스럽게 후속 탐구로 이어지도록 작성된 추천 문장. 권장 분량은 1470~1500바이트이며, 분석 결과의 풍부함에 따라 그 범위를 자연스럽게 벗어날 수 있습니다. 명사형 종결, 학생부 기재요령 준수." />
-        <RewriteByteBadge rewrittenVersion={rewrittenVersion} />
+        <InfoTooltip content={charRange
+          ? `초기 화면에서 선택한 목표 분량(${charRange[0]}~${charRange[1]}자)에 맞춰 작성된 추천 문장입니다. 명사형 종결, 학생부 기재요령 준수.`
+          : '모든 분석 결과와 최상위 도약 10기준을 반영해 본문 탐구활동이 자연스럽게 후속 탐구로 이어지도록 작성된 추천 문장. 권장 분량은 1470~1500바이트이며, 분석 결과의 풍부함에 따라 그 범위를 자연스럽게 벗어날 수 있습니다. 명사형 종결, 학생부 기재요령 준수.'} />
+        {charRange
+          ? <RewriteCharBadge rewrittenVersion={rewrittenVersion} min={charRange[0]} max={charRange[1]} />
+          : <RewriteByteBadge rewrittenVersion={rewrittenVersion} />}
       </div>
 
-      <RewriteByteGauge rewrittenVersion={rewrittenVersion} />
+      {charRange
+        ? <RewriteCharGauge rewrittenVersion={rewrittenVersion} min={charRange[0]} max={charRange[1]} />
+        : <RewriteByteGauge rewrittenVersion={rewrittenVersion} />}
 
       {/* 본문 — 별표 마크업 제거 후 평문으로 표시 */}
       <p className="text-base text-slate-800 dark:text-slate-200 leading-relaxed whitespace-pre-wrap">
